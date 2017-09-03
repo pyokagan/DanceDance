@@ -23,11 +23,8 @@ userial_flush(void)
 uint8_t
 userial_read(void)
 {
-    uint8_t out;
-    do {
-        out = Serial1.read();
-    } while (out < 0);
-    return out;
+    while (Serial1.available() <= 0);
+    return Serial1.read();
 }
 
 #endif // ARDUINO
