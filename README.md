@@ -8,6 +8,8 @@ You can either compile/upload it with the Arduino IDE or with `make`.
 
 ### Usage with Arduino IDE
 
+**NOTE**: You will need to use the latest version of Arduino IDE (>1.8.0). The version provided in the Debian/Ubuntu repositories is very old, go download it from the Arduino website instead.
+
 1. Start the Arduino IDE.
 1. Go to `File` -> `Preferences`
 1. Set the "Sketchbook location" to this directory (where this `README.md` file resides). Save the preferences by clicking `OK`.
