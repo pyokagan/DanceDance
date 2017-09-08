@@ -82,9 +82,11 @@ uframe_read(void *data, uint8_t maxLen)
             break;
         case STATE_BODY:
             byte = userial_read();
-            if (bytesRead >= maxLen) {
-                state = STATE_INIT;
-            } else if (escape) {
+            if (escape) {
+                if (bytesRead >= maxLen) {
+                    state = STATE_INIT;
+                    continue;
+                }
                 ptr[bytesRead++] = byte ^ 0x20;
                 escape = false;
             } else if (byte == UFRAME_ESCAPE_BYTE) {
@@ -105,6 +107,10 @@ uframe_read(void *data, uint8_t maxLen)
                 else
                     RESET();
             } else {
+                if (bytesRead >= maxLen) {
+                    state = STATE_INIT;
+                    continue;
+                }
                 ptr[bytesRead++] = byte;
             }
             break;
