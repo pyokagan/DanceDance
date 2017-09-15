@@ -14,14 +14,13 @@ taskI2C(void *pvParameters)
 
     for (;;) {
         taskComm_Command cmd;
-        cmd.type = TASKCOMM_COMMAND_SEND;
-        cmd.send.msg.header.type = UCOMM_MESSAGE_SAMPLE;
-        cmd.send.msg.sample.acc1x = 0;
-        cmd.send.msg.sample.acc1y = 1;
-        cmd.send.msg.sample.acc1z = 2;
-        cmd.send.msg.sample.acc2x = 3;
-        cmd.send.msg.sample.acc2y = 4;
-        cmd.send.msg.sample.acc2z = 5;
+        cmd.type = TASKCOMM_COMMAND_SEND_SAMPLE;
+        cmd.sendSample.sample.acc1.x = 0;
+        cmd.sendSample.sample.acc1.y = 1;
+        cmd.sendSample.sample.acc1.z = 2;
+        cmd.sendSample.sample.acc2.x = 3;
+        cmd.sendSample.sample.acc2.y = 4;
+        cmd.sendSample.sample.acc2.z = 5;
 
         while (!xQueueSendToBack(taskComm_queue, &cmd, portMAX_DELAY));
 

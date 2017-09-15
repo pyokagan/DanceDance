@@ -4,6 +4,6 @@ objects := $(patsubst %.c, %.o, $(wildcard ../libraries/ucomm/src/*.c) $(wildcar
 raspi-monitor: $(objects)
 
 %.o: %.c
-	$(CC) -MMD $(CPPFLAGS) $(CFLAGS) -I../libraries/ucomm/src -c -o $@ $<
+	$(CC) -Wall -MMD $(CPPFLAGS) $(CFLAGS) -I../libraries/ucomm/src -c -o $@ $<
 
 -include $(objects:.o=.d)

@@ -12,16 +12,16 @@ taskComm_setup()
 void
 taskComm(void *pvParameters)
 {
-    ucomm_id_t msgid = 0;
+    ucomm_id_t sampleId = 0;
 
     for (;;) {
         taskComm_Command cmd;
 
         while (!xQueueReceive(taskComm_queue, &cmd, portMAX_DELAY));
         switch (cmd.type) {
-        case TASKCOMM_COMMAND_SEND:
-            cmd.send.msg.header.id = msgid++;
-            ucomm_write(&cmd.send.msg);
+        case TASKCOMM_COMMAND_SEND_SAMPLE:
+            cmd.sendSample.sample.id = sampleId++;
+            ucomm_writeSample(&cmd.sendSample.sample);
             break;
         }
     }

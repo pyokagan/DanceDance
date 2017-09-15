@@ -24,7 +24,9 @@ typedef uint8_t ucomm_id_t;
     ucomm_type_t type;
 
 typedef enum {
-    UCOMM_MESSAGE_SAMPLE
+    // Message types for sending a sample
+    UCOMM_MESSAGE_ACC1,
+    UCOMM_MESSAGE_ACC2
 } ucomm_MessageType;
 
 typedef struct ucomm_MessageHeader {
@@ -32,28 +34,39 @@ typedef struct ucomm_MessageHeader {
 } ucomm_MessageHeader;
 ASSERT_SIZE(ucomm_MessageHeader, 2);
 
-typedef struct ucomm_MessageSample {
-    UCOMM_MESSAGE_HEADER // type = UCOMM_MESSAGE_SAMPLE
-    int16_t acc1x;
-    int16_t acc1y;
-    int16_t acc1z;
-    int16_t acc2x;
-    int16_t acc2y;
-    int16_t acc2z;
+typedef struct ucomm_MessageAcc {
+    UCOMM_MESSAGE_HEADER // type = UCOMM_MESSAGE_ACC1 or UCOMM_MESSAGE_ACC2
+    int16_t x, y, z;
     uint16_t __dummy_crc16;
-} ucomm_MessageSample;
-ASSERT_SIZE(ucomm_MessageSample, 16);
+} ucomm_MessageAcc;
+ASSERT_SIZE(ucomm_MessageAcc, 10);
 
 typedef union ucomm_Message {
     ucomm_MessageHeader header;
-    ucomm_MessageSample sample;
+    ucomm_MessageAcc acc;
 } ucomm_Message;
+
+typedef struct ucomm_Sample {
+    ucomm_id_t id; // sample ID.
+    struct {
+        int16_t x, y, z;
+    } acc1;
+    struct {
+        int16_t x, y, z;
+    } acc2;
+} ucomm_Sample;
 
 void ucomm_init(void);
 
 void ucomm_read(ucomm_Message *);
 
 void ucomm_write(const ucomm_Message *);
+
+void ucomm_writeSample(const ucomm_Sample *);
+
+void ucomm_writeSampleAcc1(const ucomm_Sample *);
+
+void ucomm_writeSampleAcc2(const ucomm_Sample *);
 
 #undef ASSERT_SIZE
 #undef ASSERT_STRINGIFY
