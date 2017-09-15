@@ -38,7 +38,7 @@ main(int argc, char *argv[])
     bool firstMessage = true;
     int numDisconnects = 0;
     int numDropped = 0;
-    uint8_t lastId; // Used to detect dropped messages
+    ucomm_id_t lastId; // Used to detect dropped messages
     struct timespec lastTime; // Used to detect disconnects
 
     userial_init();
@@ -63,7 +63,7 @@ main(int argc, char *argv[])
                 // overflow.
                 if (msg.header.id <= lastId) {
                     // Overflow
-                    numDropped += 255 - lastId + msg.header.id;
+                    numDropped += ((ucomm_id_t)-1) - lastId + msg.header.id;
                 } else {
                     numDropped += msg.header.id - lastId - 1;
                 }

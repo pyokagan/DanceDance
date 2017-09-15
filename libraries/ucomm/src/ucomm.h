@@ -16,19 +16,24 @@ extern "C" {
 #define ASSERT_SIZE(st, s) typedef char static_assert_ ## st ## _does_not_have_size_ ## s [(!!(sizeof(st) == s)) * 2 - 1]
 #endif
 
+typedef uint8_t ucomm_type_t;
+typedef uint8_t ucomm_id_t;
+
+#define UCOMM_MESSAGE_HEADER \
+    ucomm_id_t id; \
+    ucomm_type_t type;
+
 typedef enum {
     UCOMM_MESSAGE_SAMPLE
 } ucomm_MessageType;
 
 typedef struct ucomm_MessageHeader {
-    uint8_t type;
-    uint8_t id;
+    UCOMM_MESSAGE_HEADER
 } ucomm_MessageHeader;
 ASSERT_SIZE(ucomm_MessageHeader, 2);
 
 typedef struct ucomm_MessageSample {
-    uint8_t type; // UCOMM_MESSAGE_SAMPLE
-    uint8_t id;
+    UCOMM_MESSAGE_HEADER // type = UCOMM_MESSAGE_SAMPLE
     int16_t acc1x;
     int16_t acc1y;
     int16_t acc1z;

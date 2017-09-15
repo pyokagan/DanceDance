@@ -12,7 +12,7 @@ taskComm_setup()
 void
 taskComm(void *pvParameters)
 {
-    uint8_t msgid = 0;
+    ucomm_id_t msgid = 0;
 
     for (;;) {
         taskComm_Command cmd;
