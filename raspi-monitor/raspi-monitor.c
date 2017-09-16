@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 volatile sig_atomic_t done;
 
@@ -33,10 +34,15 @@ main(int argc, char *argv[])
     action.sa_handler = onTerm;
     sigaction(SIGINT, &action, NULL);
 
+    srand(time(NULL));
+
     while (!done) {
         ucomm_Message msg;
 
         ucomm_read(&msg);
+        if (rand() < RAND_MAX / 100 * 20)
+            continue; // 20% chance of packet loss
+
         if (ucomm_SampleReader_feed(&sampleReader, &msg)) {
             if (sampleReader.disconnect) {
                 ucomm_SampleAssembler_reset(&sampleAssembler);
