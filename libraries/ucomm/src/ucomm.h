@@ -1,5 +1,6 @@
 #ifndef _UCOMM_H
 #define _UCOMM_H
+#include "udebug.h"
 #include "userial.h"
 #include "uframe.h"
 #include <stdint.h>
@@ -81,6 +82,8 @@ void ucomm_writeSample(const ucomm_Sample *);
 void ucomm_writeSampleAcc1(const ucomm_Sample *);
 
 void ucomm_writeSampleAcc2(const ucomm_Sample *);
+
+void ucomm_print(const ucomm_Message *);
 
 #undef ASSERT_SIZE
 #undef ASSERT_STRINGIFY
