@@ -9,6 +9,7 @@ CHEAT_TEST(works,
 
     ucomm_SampleAssembler_init(&sampleAssembler, 2, 1);
     sampleAssembler.start = sampleAssembler.end = 2;
+    sampleAssembler.ucomm_write = NULL;
 
     cheat_assert(sampleAssembler.numReady == 0);
     cheat_assert(sampleAssembler.alloc == 4);
@@ -146,6 +147,7 @@ CHEAT_TEST(large_window,
     ucomm_Message msg;
 
     ucomm_SampleAssembler_init(&sampleAssembler, 500, 1);
+    sampleAssembler.ucomm_write = NULL;
 
     // Send in 500 proper samples
     for (unsigned int i = 0; i < 500; i++) {

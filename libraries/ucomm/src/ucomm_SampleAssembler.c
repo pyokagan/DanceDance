@@ -30,6 +30,7 @@ ucomm_SampleAssembler_init(ucomm_SampleAssembler *self,
     self->disconnect = false;
     self->ready = false;
     self->numReady = 0;
+    self->ucomm_write = ucomm_write;
 }
 
 void
@@ -146,6 +147,30 @@ allocOne(ucomm_SampleAssembler *self, ucomm_id_t id)
     return idx;
 }
 
+/**
+ * Requests retransmission of missing pieces from the sample at `idx`.
+ */
+static void
+sendNacks(const ucomm_SampleAssembler *self, unsigned int idx)
+{
+    ucomm_Message msg;
+    msg.header.type = UCOMM_MESSAGE_SAMPLE_NACK;
+    msg.sampleNack.id = self->sample[idx].id;
+    msg.sampleNack.packetTypes = 0;
+
+    if (self->state[idx] == STATE_READY)
+        return;
+
+    if (!(self->state[idx] & STATE_ACC1))
+        msg.sampleNack.packetTypes |= UCOMM_SAMPLENACK_ACC1;
+
+    if (!(self->state[idx] & STATE_ACC2))
+        msg.sampleNack.packetTypes |= UCOMM_SAMPLENACK_ACC2;
+
+    if (self->ucomm_write)
+        self->ucomm_write(&msg);
+}
+
 bool
 ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg)
 {
@@ -166,10 +191,20 @@ ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg
     if (!getIdx(self, msg->header.id, &idx)) {
         if (!isEmpty(self)) {
             ucomm_id_t id;
-            for (id = self->sample[self->start].id + getLen(self); id != msg->header.id; id++)
-                allocOne(self, id);
+            for (id = self->sample[self->start].id + getLen(self); id != msg->header.id; id++) {
+                idx = allocOne(self, id);
+                sendNacks(self, idx);
+            }
         }
         idx = allocOne(self, msg->header.id);
+
+        // Resend NACKS
+        unsigned int len = getLen(self);
+        for (unsigned int i = idx, j = 0; j < ARDUINO_MAX_BUFFER && j < len; j++) {
+            if (j % 2 == 0 && i != idx)
+                sendNacks(self, i);
+            i = i == 0 ? self->alloc - 1 : i - 1;
+        }
     }
 
     unsigned int prevState = self->state[idx];

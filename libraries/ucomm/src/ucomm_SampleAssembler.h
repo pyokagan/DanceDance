@@ -19,6 +19,7 @@ typedef struct ucomm_SampleAssembler {
     unsigned int numReady; // Number of samples that are ready
     bool disconnect;
     bool ready;
+    void (*ucomm_write)(const ucomm_Message *);
 } ucomm_SampleAssembler;
 
 void ucomm_SampleAssembler_init(ucomm_SampleAssembler *,
