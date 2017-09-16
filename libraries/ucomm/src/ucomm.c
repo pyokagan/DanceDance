@@ -18,6 +18,9 @@ ucomm_write(const ucomm_Message *msg)
     uint8_t msgsize;
 
     switch (msg->header.type) {
+    case UCOMM_MESSAGE_SAMPLE_NACK:
+        msgsize = sizeof(ucomm_MessageSampleNack);
+        break;
     case UCOMM_MESSAGE_ACC1:
     case UCOMM_MESSAGE_ACC2:
         msgsize = sizeof(ucomm_MessageAcc);

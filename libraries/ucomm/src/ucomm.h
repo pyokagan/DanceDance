@@ -4,6 +4,7 @@
 #include "uframe.h"
 #include <stdint.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +26,7 @@ typedef uint8_t ucomm_id_t;
 
 typedef enum {
     // Message types for sending a sample
+    UCOMM_MESSAGE_SAMPLE_NACK,
     UCOMM_MESSAGE_ACC1,
     UCOMM_MESSAGE_ACC2
 } ucomm_MessageType;
@@ -33,6 +35,17 @@ typedef struct ucomm_MessageHeader {
     UCOMM_MESSAGE_HEADER
 } ucomm_MessageHeader;
 ASSERT_SIZE(ucomm_MessageHeader, 2);
+
+#define UCOMM_SAMPLENACK_ACC1 0x01
+#define UCOMM_SAMPLENACK_ACC2 0x02
+
+typedef struct ucomm_MessageSampleNack {
+    UCOMM_MESSAGE_HEADER // type = UCOMM_MESSAGE_SAMPLE_NACK
+    uint8_t packetTypes; // bitfield of UCOMM_SAMPLENACK_*
+    uint8_t __padding;
+    uint16_t __dummy_crc16;
+} ucomm_MessageSampleNack;
+ASSERT_SIZE(ucomm_MessageSampleNack, 6);
 
 typedef struct ucomm_MessageAcc {
     UCOMM_MESSAGE_HEADER // type = UCOMM_MESSAGE_ACC1 or UCOMM_MESSAGE_ACC2
@@ -44,6 +57,7 @@ ASSERT_SIZE(ucomm_MessageAcc, 10);
 typedef union ucomm_Message {
     ucomm_MessageHeader header;
     ucomm_MessageAcc acc;
+    ucomm_MessageSampleNack sampleNack;
 } ucomm_Message;
 
 typedef struct ucomm_Sample {

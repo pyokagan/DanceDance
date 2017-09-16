@@ -6,7 +6,8 @@
 #include <ucomm.h>
 
 typedef enum {
-    TASKCOMM_COMMAND_SEND_SAMPLE
+    TASKCOMM_COMMAND_SEND_SAMPLE,
+    TASKCOMM_COMMAND_RESEND_SAMPLE
 } taskComm_CommandType;
 
 typedef struct taskComm_CommandSendSample {
@@ -14,9 +15,16 @@ typedef struct taskComm_CommandSendSample {
     ucomm_Sample sample;
 } taskComm_CommandSendSample;
 
+typedef struct taskComm_CommandResendSample {
+    taskComm_CommandType type; // TASKCOMM_COMMAND_RESEND_SAMPLE
+    uint8_t packetTypes;
+    ucomm_id_t id;
+} taskComm_CommandResend;
+
 typedef union taskComm_Command {
     taskComm_CommandType type;
     taskComm_CommandSendSample sendSample;
+    taskComm_CommandResendSample resendSample;
 } taskComm_Command;
 
 extern QueueHandle_t taskComm_queue;
