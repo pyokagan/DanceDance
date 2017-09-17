@@ -1,9 +1,15 @@
-objects := $(patsubst %.c, %.o, $(wildcard ../libraries/ucomm/src/*.c) $(wildcard *.c)) \
-	$(patsubst %.cpp, %.o, $(wildcard ../libraries/ucomm/src/*.cpp) $(wildcard *.cpp))
+CFLAGS = -g -Wall -MMD -I../libraries/ucomm/src
+objects := $(patsubst %.c, %.o, $(wildcard *.c))
 
-raspi-monitor: $(objects)
+.PHONY: clean ../libraries/ucomm/libucomm.a
 
-%.o: %.c
-	$(CC) -Wall -MMD $(CPPFLAGS) $(CFLAGS) -I../libraries/ucomm/src -c -o $@ $<
+raspi-monitor: $(objects) ../libraries/ucomm/libucomm.a
+
+../libraries/ucomm/libucomm.a:
+	$(MAKE) -C ../libraries/ucomm
+
+clean:
+	$(RM) $(objects) $(objects:.o=.d) raspi-monitor
+	$(MAKE) -C ../libraries/ucomm clean
 
 -include $(objects:.o=.d)
