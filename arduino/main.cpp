@@ -2,7 +2,7 @@
 #include "taskI2C.h"
 
 void setup() {
-    Serial.begin(9600); // serial for debug messages
+    Serial.begin(115200); // serial for debug messages
     taskComm_setup();
     taskI2C_setup();
     xTaskCreate(taskComm, "Comm", 128, NULL, 1, NULL);
