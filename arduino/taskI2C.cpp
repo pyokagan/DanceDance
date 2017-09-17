@@ -1,26 +1,55 @@
 #include "taskI2C.h"
 #include "taskComm.h"
+#include <Wire.h>
+#include <I2Cdev.h>
+#include <MPU6050.h>
+#include <stdbool.h>
+
+static MPU6050 mpu1(0x68);
+static MPU6050 mpu2(0x69);
+
+static bool mpu1Active, mpu2Active;
 
 void
 taskI2C_setup()
 {
-    // do nothing (for now)
+    Wire.begin();
+    mpu1.initialize();
+    mpu2.initialize();
+
+    mpu1Active = mpu1.testConnection();
+    mpu2Active = mpu2.testConnection();
+
+    if (mpu1Active)
+        mpu1.setDLPFMode(4);
+
+    if (mpu2Active)
+        mpu2.setDLPFMode(4);
 }
 
 void
 taskI2C(void *pvParameters)
 {
     TickType_t lastWakeTime = xTaskGetTickCount();
+    taskComm_Command cmd;
+    cmd.type = TASKCOMM_COMMAND_SEND_SAMPLE;
+    cmd.sendSample.sample.acc1.x = 0;
+    cmd.sendSample.sample.acc1.y = 0;
+    cmd.sendSample.sample.acc1.z = 0;
+    cmd.sendSample.sample.acc2.x = 0;
+    cmd.sendSample.sample.acc2.y = 0;
+    cmd.sendSample.sample.acc2.z = 0;
 
     for (;;) {
-        taskComm_Command cmd;
-        cmd.type = TASKCOMM_COMMAND_SEND_SAMPLE;
-        cmd.sendSample.sample.acc1.x = 0;
-        cmd.sendSample.sample.acc1.y = 1;
-        cmd.sendSample.sample.acc1.z = 2;
-        cmd.sendSample.sample.acc2.x = 3;
-        cmd.sendSample.sample.acc2.y = 4;
-        cmd.sendSample.sample.acc2.z = 5;
+        if (mpu1Active)
+            mpu1.getAcceleration(&cmd.sendSample.sample.acc1.x,
+                            &cmd.sendSample.sample.acc1.y,
+                            &cmd.sendSample.sample.acc1.z);
+
+        if (mpu2Active)
+            mpu2.getAcceleration(&cmd.sendSample.sample.acc2.x,
+                            &cmd.sendSample.sample.acc2.y,
+                            &cmd.sendSample.sample.acc2.z);
 
         while (!xQueueSendToBack(taskComm_queue, &cmd, portMAX_DELAY));
 
