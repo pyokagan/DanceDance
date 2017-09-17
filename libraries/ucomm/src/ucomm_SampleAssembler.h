@@ -18,6 +18,8 @@ typedef struct ucomm_SampleAssembler {
     ucomm_Sample *sample; // The (partial) sample data
     unsigned int *state; // The state of each sample
     unsigned int numReady; // Number of samples that are ready
+    unsigned int numPacketsRecovered; // Number of packets recovered through NACKs.
+    unsigned int numSamplesDropped; // Number of samples dropped.
     struct timespec lastTime; // Time when last packet was received.
     bool firstPacket;
     bool disconnect;

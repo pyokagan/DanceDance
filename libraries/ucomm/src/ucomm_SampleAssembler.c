@@ -45,6 +45,8 @@ ucomm_SampleAssembler_init(ucomm_SampleAssembler *self,
     self->ready = false;
     self->numReady = 0;
     self->ucomm_write = ucomm_write;
+    self->numPacketsRecovered = 0;
+    self->numSamplesDropped = 0;
 }
 
 void
@@ -152,8 +154,10 @@ dropOne(ucomm_SampleAssembler *self)
 static unsigned int
 allocOne(ucomm_SampleAssembler *self, ucomm_id_t id)
 {
-    if (isFull(self))
+    if (isFull(self)) {
+        self->numSamplesDropped++;
         dropOne(self);
+    }
 
     self->state[self->end] = 0;
     self->sample[self->end].id = id;
@@ -214,6 +218,8 @@ ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg
         self->ready = false;
     }
 
+    bool isRecoveredPacket = false;
+
     // Create empty slots if this is a new message
     if (!getIdx(self, msg->header.id, &idx)) {
         if (!isEmpty(self)) {
@@ -228,22 +234,28 @@ ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg
         // Resend NACKS
         unsigned int len = getLen(self);
         for (unsigned int i = idx, j = 0; j < ARDUINO_MAX_BUFFER && j < len; j++) {
-            if (j % 2 == 0 && i != idx)
+            if (j % 30 == 0 && i != idx)
                 sendNacks(self, i);
             i = i == 0 ? self->alloc - 1 : i - 1;
         }
+    } else if (idx != getLastIdx(self)) {
+        isRecoveredPacket = true;
     }
 
     unsigned int prevState = self->state[idx];
 
     switch (msg->header.type) {
     case UCOMM_MESSAGE_ACC1:
+        if (isRecoveredPacket && !(self->state[idx] & STATE_ACC1))
+            self->numPacketsRecovered++;
         self->sample[idx].acc1.x = msg->acc.x;
         self->sample[idx].acc1.y = msg->acc.y;
         self->sample[idx].acc1.z = msg->acc.z;
         self->state[idx] |= STATE_ACC1;
         break;
     case UCOMM_MESSAGE_ACC2:
+        if (isRecoveredPacket && !(self->state[idx] & STATE_ACC2))
+            self->numPacketsRecovered++;
         self->sample[idx].acc2.x = msg->acc.x;
         self->sample[idx].acc2.y = msg->acc.y;
         self->sample[idx].acc2.z = msg->acc.z;
