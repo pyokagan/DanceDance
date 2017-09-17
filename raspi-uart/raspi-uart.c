@@ -47,12 +47,15 @@ onTerm(int signum)
     done = 1;
 }
 
+static bool streamMode = false;
+
 static pthread_mutex_t samplesMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t samplesStatusCondition = PTHREAD_COND_INITIALIZER;
 static unsigned int numSamples = 63;
 static enum {
     SAMPLES_OUTDATED,
     SAMPLES_READY,
+    SAMPLES_READY_WITH_DISCONNECT,
     SAMPLES_QUIT
 } samplesStatus = SAMPLES_OUTDATED;
 static ucomm_Sample *samples;
@@ -65,21 +68,29 @@ samplePrinter(void *arg)
     bool firstSample = true;
 
     for (;;) {
+        bool quit, disconnect;
+
         // Wait for timeslice to be ready
         pthread_mutex_lock(&samplesMutex);
         if (samplesStatus == SAMPLES_OUTDATED)
             pthread_cond_wait(&samplesStatusCondition, &samplesMutex);
 
-        if (samplesStatus == SAMPLES_QUIT)
-            return NULL;
+        quit = samplesStatus == SAMPLES_QUIT;
+        disconnect = samplesStatus == SAMPLES_READY_WITH_DISCONNECT;
 
         // Samples are ready, copy them for our private usage
         memcpy(samplePrinterSamples, samples, sizeof(ucomm_Sample) * numSamples);
         samplesStatus = SAMPLES_OUTDATED;
         pthread_mutex_unlock(&samplesMutex);
 
-        if (!firstSample)
+        if (quit)
+            return NULL;
+
+        if (!firstSample && !streamMode)
             fprintf(samplePrinterFile, "# ---\n");
+
+        if (streamMode && disconnect)
+            fprintf(samplePrinterFile, "# --- disconnect ---\n");
 
         for (unsigned i = 0; i < numSamples; i++) {
             fprintf(samplePrinterFile, "%d, %d, %d, %d, %d, %d\n",
@@ -99,7 +110,10 @@ samplePrinter(void *arg)
 }
 
 static char help[] =
-    "raspi-uart [-h] [-t TIMEFRAME] [-s SLACK] [-m MLPIPE]\n";
+    "raspi-uart [-h] [-r] [-t TIMEFRAME] [-s SLACK] [-m MLPIPE]\n"
+    "\n"
+    " -r         Enable stream mode.\n"
+    "\n";
 
 int
 main(int argc, char *argv[])
@@ -110,7 +124,7 @@ main(int argc, char *argv[])
     int packetLoss = 0;
     char *endptr;
 
-    while ((c = getopt(argc, argv, "ht:s:m:l:")) != -1) {
+    while ((c = getopt(argc, argv, "ht:s:m:l:r")) != -1) {
         switch (c) {
         case 'h':
             fputs(help, stdout);
@@ -137,11 +151,20 @@ main(int argc, char *argv[])
             if (errno || endptr == optarg)
                 die("-l: invalid value: %s", optarg);
             break;
+        case 'r':
+            streamMode = true;
+            break;
         case '?':
             return 0;
         default:
             die("BUG: unexpected c value %d", c);
         }
+    }
+
+    // These parameters are forced in stream mode.
+    if (streamMode) {
+        numSamples = 1;
+        slack = 1;
     }
 
     info("mlPipe: %s", mlPipe);
@@ -159,6 +182,8 @@ main(int argc, char *argv[])
     // Init sample assembler
     ucomm_SampleAssembler sampleAssembler;
     ucomm_SampleAssembler_init(&sampleAssembler, numSamples, slack);
+    if (streamMode)
+        sampleAssembler.ucomm_write = NULL; // NACK sending disabled in stream mode
 
     // Open samplePrinterFile
     samplePrinterFile = fopen(mlPipe, "a");
@@ -175,7 +200,9 @@ main(int argc, char *argv[])
 
     // Write header to samplePrinterFile
     fprintf(samplePrinterFile, "# ===========================================\n");
-    fprintf(samplePrinterFile, "# timeslice=%u, slack=%u, packetLoss=%d\n", numSamples, slack, packetLoss);
+    fprintf(samplePrinterFile, "# timeslice=%u, slack=%u, packetLoss=%d%s\n",
+            numSamples, slack, packetLoss,
+            streamMode ? " STREAM" : "");
     fprintf(samplePrinterFile, "# acc1x, acc1y, acc1z, acc2x, acc2y, acc2z\n");
     fflush(samplePrinterFile);
 
@@ -184,6 +211,8 @@ main(int argc, char *argv[])
     if (ret)
         die("pthread_create failed: %s", strerror(errno));
 
+    bool disconnect = false;
+    unsigned int prevSamplesDropped = sampleAssembler.numSamplesDropped;
     while (!done) {
         ucomm_Message msg;
 
@@ -196,17 +225,28 @@ main(int argc, char *argv[])
             continue;
         }
 
-        if (sampleAssembler.ready && !pthread_mutex_trylock(&samplesMutex)) {
-            // Copy samples to shared memory area
-            for (unsigned i = sampleAssembler.start, n = 0; n < sampleAssembler.windowSize; n++) {
-                samples[n] = sampleAssembler.sample[i];
-                i = (i + 1) % sampleAssembler.alloc;
-            }
+        if (sampleAssembler.disconnect)
+            disconnect = true;
+        if (sampleAssembler.numSamplesDropped != prevSamplesDropped)
+            disconnect = true;
+        prevSamplesDropped = sampleAssembler.numSamplesDropped;
 
-            // Ready for samplePrinter thread to read it.
-            samplesStatus = SAMPLES_READY;
-            pthread_cond_signal(&samplesStatusCondition);
-            pthread_mutex_unlock(&samplesMutex);
+        if (sampleAssembler.ready) {
+            if (!pthread_mutex_trylock(&samplesMutex)) {
+                // Copy samples to shared memory area
+                for (unsigned i = sampleAssembler.start, n = 0; n < sampleAssembler.windowSize; n++) {
+                    samples[n] = sampleAssembler.sample[i];
+                    i = (i + 1) % sampleAssembler.alloc;
+                }
+
+                // Ready for samplePrinter thread to read it.
+                samplesStatus = disconnect ? SAMPLES_READY_WITH_DISCONNECT : SAMPLES_READY;
+                pthread_cond_signal(&samplesStatusCondition);
+                pthread_mutex_unlock(&samplesMutex);
+                disconnect = false;
+            } else {
+                disconnect = true;
+            }
         }
     }
 
