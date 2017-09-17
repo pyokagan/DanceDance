@@ -9,7 +9,7 @@ void
 taskComm_setup()
 {
     ucomm_init();
-    taskComm_queue = xQueueCreate(40, sizeof(taskComm_Command));
+    taskComm_queue = xQueueCreate(100, sizeof(taskComm_Command));
     SampleBuffer_init(&sampleBuffer);
 }
 
@@ -35,10 +35,10 @@ taskComm(void *pvParameters)
                 break;
 
             if (cmd.resendSample.packetTypes & UCOMM_SAMPLENACK_ACC1)
-                ucomm_writeSampleAcc1(&sampleBuffer.sample[idx]);
+                ucomm_writeSampleAcc1(&sampleBuffer.sample[idx], true);
 
             if (cmd.resendSample.packetTypes & UCOMM_SAMPLENACK_ACC2)
-                ucomm_writeSampleAcc2(&sampleBuffer.sample[idx]);
+                ucomm_writeSampleAcc2(&sampleBuffer.sample[idx], true);
 
             } break;
         }

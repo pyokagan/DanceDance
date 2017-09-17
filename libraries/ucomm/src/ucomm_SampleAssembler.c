@@ -74,7 +74,16 @@ static bool
 isSampleType(ucomm_type_t type)
 {
     return type == UCOMM_MESSAGE_ACC1 ||
-        type == UCOMM_MESSAGE_ACC2;
+        type == UCOMM_MESSAGE_ACC1_RESEND ||
+        type == UCOMM_MESSAGE_ACC2 ||
+        type == UCOMM_MESSAGE_ACC2_RESEND;
+}
+
+static bool
+isSampleResend(ucomm_type_t type)
+{
+    return type == UCOMM_MESSAGE_ACC1_RESEND ||
+        type == UCOMM_MESSAGE_ACC2_RESEND;
 }
 
 static bool
@@ -218,10 +227,20 @@ ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg
         self->ready = false;
     }
 
-    bool isRecoveredPacket = false;
+    bool isResend = isSampleResend(msg->header.type);
+    bool foundIdx = getIdx(self, msg->header.id, &idx);
+
+    if (!isResend && foundIdx && idx != getLastIdx(self))
+        foundIdx = false;
 
     // Create empty slots if this is a new message
-    if (!getIdx(self, msg->header.id, &idx)) {
+    if (!foundIdx) {
+        if (isResend) {
+            // Packet is a resend, but we don't care about it anymore.
+            // Drop the packet.
+            return true;
+        }
+
         if (!isEmpty(self)) {
             ucomm_id_t id;
             for (id = self->sample[self->start].id + getLen(self); id != msg->header.id; id++) {
@@ -234,19 +253,18 @@ ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg
         // Resend NACKS
         unsigned int len = getLen(self);
         for (unsigned int i = idx, j = 0; j < ARDUINO_MAX_BUFFER && j < len; j++) {
-            if (j % 30 == 0 && i != idx)
+            if (j % 4 == 0 && i != idx)
                 sendNacks(self, i);
             i = i == 0 ? self->alloc - 1 : i - 1;
         }
-    } else if (idx != getLastIdx(self)) {
-        isRecoveredPacket = true;
     }
 
     unsigned int prevState = self->state[idx];
 
     switch (msg->header.type) {
     case UCOMM_MESSAGE_ACC1:
-        if (isRecoveredPacket && !(self->state[idx] & STATE_ACC1))
+    case UCOMM_MESSAGE_ACC1_RESEND:
+        if (isResend && !(self->state[idx] & STATE_ACC1))
             self->numPacketsRecovered++;
         self->sample[idx].acc1.x = msg->acc.x;
         self->sample[idx].acc1.y = msg->acc.y;
@@ -254,7 +272,8 @@ ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg
         self->state[idx] |= STATE_ACC1;
         break;
     case UCOMM_MESSAGE_ACC2:
-        if (isRecoveredPacket && !(self->state[idx] & STATE_ACC2))
+    case UCOMM_MESSAGE_ACC2_RESEND:
+        if (isResend && !(self->state[idx] & STATE_ACC2))
             self->numPacketsRecovered++;
         self->sample[idx].acc2.x = msg->acc.x;
         self->sample[idx].acc2.y = msg->acc.y;

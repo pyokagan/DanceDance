@@ -14,8 +14,12 @@ typeStr(ucomm_type_t type)
         return F("sample-nack");
     case UCOMM_MESSAGE_ACC1:
         return F("acc1");
+    case UCOMM_MESSAGE_ACC1_RESEND:
+        return F("acc1-resend");
     case UCOMM_MESSAGE_ACC2:
         return F("acc2");
+    case UCOMM_MESSAGE_ACC2_RESEND:
+        return F("acc2-resend");
     default:
         return F("unknown");
     }
@@ -33,7 +37,9 @@ ucomm_print(const ucomm_Message *msg)
                 msg->sampleNack.id, typeStr(msg->sampleNack.packetTypes));
         break;
     case UCOMM_MESSAGE_ACC1:
+    case UCOMM_MESSAGE_ACC1_RESEND:
     case UCOMM_MESSAGE_ACC2:
+    case UCOMM_MESSAGE_ACC2_RESEND:
         snprintf(buf, sizeof(buf), F("%s, %u, %d, %d, %d\n"),
                 typeStr(msg->acc.type), msg->acc.id, msg->acc.x, msg->acc.y, msg->acc.z);
         break;

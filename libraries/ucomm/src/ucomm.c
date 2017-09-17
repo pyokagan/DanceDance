@@ -22,7 +22,9 @@ ucomm_write(const ucomm_Message *msg)
         msgsize = sizeof(ucomm_MessageSampleNack);
         break;
     case UCOMM_MESSAGE_ACC1:
+    case UCOMM_MESSAGE_ACC1_RESEND:
     case UCOMM_MESSAGE_ACC2:
+    case UCOMM_MESSAGE_ACC2_RESEND:
         msgsize = sizeof(ucomm_MessageAcc);
         break;
     default:
@@ -35,16 +37,16 @@ ucomm_write(const ucomm_Message *msg)
 void
 ucomm_writeSample(const ucomm_Sample *sample)
 {
-    ucomm_writeSampleAcc1(sample);
-    ucomm_writeSampleAcc2(sample);
+    ucomm_writeSampleAcc1(sample, false);
+    ucomm_writeSampleAcc2(sample, false);
 }
 
 void
-ucomm_writeSampleAcc1(const ucomm_Sample *sample)
+ucomm_writeSampleAcc1(const ucomm_Sample *sample, bool resend)
 {
     ucomm_Message msg;
 
-    msg.acc.type = UCOMM_MESSAGE_ACC1;
+    msg.acc.type = resend ? UCOMM_MESSAGE_ACC1_RESEND : UCOMM_MESSAGE_ACC1;
     msg.acc.id = sample->id;
     msg.acc.x = sample->acc1.x;
     msg.acc.y = sample->acc1.y;
@@ -53,11 +55,11 @@ ucomm_writeSampleAcc1(const ucomm_Sample *sample)
 }
 
 void
-ucomm_writeSampleAcc2(const ucomm_Sample *sample)
+ucomm_writeSampleAcc2(const ucomm_Sample *sample, bool resend)
 {
     ucomm_Message msg;
 
-    msg.acc.type = UCOMM_MESSAGE_ACC2;
+    msg.acc.type = resend ? UCOMM_MESSAGE_ACC2_RESEND : UCOMM_MESSAGE_ACC2;
     msg.acc.id = sample->id;
     msg.acc.x = sample->acc2.x;
     msg.acc.y = sample->acc2.y;

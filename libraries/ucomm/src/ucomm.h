@@ -29,7 +29,9 @@ typedef enum {
     // Message types for sending a sample
     UCOMM_MESSAGE_SAMPLE_NACK,
     UCOMM_MESSAGE_ACC1,
-    UCOMM_MESSAGE_ACC2
+    UCOMM_MESSAGE_ACC1_RESEND,
+    UCOMM_MESSAGE_ACC2,
+    UCOMM_MESSAGE_ACC2_RESEND
 } ucomm_MessageType;
 
 typedef struct ucomm_MessageHeader {
@@ -79,9 +81,9 @@ void ucomm_write(const ucomm_Message *);
 
 void ucomm_writeSample(const ucomm_Sample *);
 
-void ucomm_writeSampleAcc1(const ucomm_Sample *);
+void ucomm_writeSampleAcc1(const ucomm_Sample *, bool resend);
 
-void ucomm_writeSampleAcc2(const ucomm_Sample *);
+void ucomm_writeSampleAcc2(const ucomm_Sample *, bool resend);
 
 void ucomm_print(const ucomm_Message *);
 

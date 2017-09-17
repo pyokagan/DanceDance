@@ -67,7 +67,7 @@ CHEAT_TEST(works,
 
     // Complete sample 0
     msg.header.id = 0;
-    msg.header.type = UCOMM_MESSAGE_ACC2;
+    msg.header.type = UCOMM_MESSAGE_ACC2_RESEND;
     msg.acc.x = 10;
     msg.acc.y = 11;
     msg.acc.z = 12;
@@ -84,7 +84,7 @@ CHEAT_TEST(works,
     // Complete sample 1
     // numReady should not change since the sample is within the "slack" area
     msg.header.id = 1;
-    msg.header.type = UCOMM_MESSAGE_ACC2;
+    msg.header.type = UCOMM_MESSAGE_ACC2_RESEND;
     msg.acc.x = 13;
     msg.acc.y = 14;
     msg.acc.z = 15;
@@ -102,7 +102,7 @@ CHEAT_TEST(works,
     // The ready flag should now be asserted since we successfully built a
     // contiguous block of 2 samples (255 and 0)
     msg.header.id = 255;
-    msg.header.type = UCOMM_MESSAGE_ACC2;
+    msg.header.type = UCOMM_MESSAGE_ACC2_RESEND;
     msg.acc.x = 16;
     msg.acc.y = 17;
     msg.acc.z = 18;
