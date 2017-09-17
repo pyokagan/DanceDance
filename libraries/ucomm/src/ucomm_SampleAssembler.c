@@ -17,6 +17,19 @@
 
 #define STATE_READY (STATE_ACC1 | STATE_ACC2)
 
+static void
+timespec_diff(const struct timespec *start, const struct timespec *stop,
+        struct timespec *result)
+{
+    if ((stop->tv_nsec - start->tv_nsec) < 0) {
+        result->tv_sec = stop->tv_sec - start->tv_sec - 1;
+        result->tv_nsec = stop->tv_nsec - start->tv_nsec + 1000000000;
+    } else {
+        result->tv_sec = stop->tv_sec - start->tv_sec;
+        result->tv_nsec = stop->tv_nsec - start->tv_nsec;
+    }
+}
+
 void
 ucomm_SampleAssembler_init(ucomm_SampleAssembler *self,
         unsigned int windowSize, unsigned int slack)
@@ -27,6 +40,7 @@ ucomm_SampleAssembler_init(ucomm_SampleAssembler *self,
     self->end = 0;
     self->sample = malloc(self->alloc * sizeof(*self->sample));
     self->state = malloc(self->alloc * sizeof(*self->state));
+    self->firstPacket = true;
     self->disconnect = false;
     self->ready = false;
     self->numReady = 0;
@@ -51,6 +65,7 @@ ucomm_SampleAssembler_reset(ucomm_SampleAssembler *self)
     self->start = 0;
     self->end = 0;
     self->numReady = 0;
+    self->firstPacket = true;
 }
 
 static bool
@@ -180,6 +195,18 @@ ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg
         return false;
 
     self->disconnect = false;
+    if (!self->firstPacket) {
+        struct timespec currentTime, diff;
+
+        clock_gettime(CLOCK_MONOTONIC, &currentTime);
+        timespec_diff(&self->lastTime, &currentTime, &diff);
+        if (diff.tv_sec >= 1)
+            ucomm_SampleAssembler_reset(self);
+        self->lastTime = currentTime;
+    } else {
+        clock_gettime(CLOCK_MONOTONIC, &self->lastTime);
+    }
+    self->firstPacket = false;
 
     if (self->ready) {
         for (unsigned int i = 0; i < self->windowSize; i++)

@@ -5,6 +5,7 @@
 #ifndef ARDUINO
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,6 +18,8 @@ typedef struct ucomm_SampleAssembler {
     ucomm_Sample *sample; // The (partial) sample data
     unsigned int *state; // The state of each sample
     unsigned int numReady; // Number of samples that are ready
+    struct timespec lastTime; // Time when last packet was received.
+    bool firstPacket;
     bool disconnect;
     bool ready;
     void (*ucomm_write)(const ucomm_Message *);
