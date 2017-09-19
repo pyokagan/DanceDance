@@ -20,6 +20,8 @@ typeStr(ucomm_type_t type)
         return F("acc2");
     case UCOMM_MESSAGE_ACC2_RESEND:
         return F("acc2-resend");
+    case UCOMM_MESSAGE_POW:
+        return F("pow");
     default:
         return F("unknown");
     }
@@ -42,6 +44,10 @@ ucomm_print(const ucomm_Message *msg)
     case UCOMM_MESSAGE_ACC2_RESEND:
         snprintf(buf, sizeof(buf), F("%s, %u, %d, %d, %d\n"),
                 typeStr(msg->acc.type), msg->acc.id, msg->acc.x, msg->acc.y, msg->acc.z);
+        break;
+    case UCOMM_MESSAGE_POW:
+        snprintf(buf, sizeof(buf), F("%s, %u, %u, %u\n"),
+                typeStr(msg->pow.type), msg->pow.id, msg->pow.voltage, msg->pow.current);
         break;
     default:
         snprintf(buf, sizeof(buf), F("unknown\n"));

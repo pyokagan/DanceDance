@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <ucomm.h>
 #include <ucomm_SampleAssembler.h>
+#include <ucomm_PowReader.h>
 
 __attribute__((noreturn))
 static void
@@ -109,6 +110,54 @@ samplePrinter(void *arg)
     return NULL;
 }
 
+static pthread_mutex_t powMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t powStatusCondition = PTHREAD_COND_INITIALIZER;
+static enum {
+    POW_OUTDATED,
+    POW_READY,
+    POW_READY_WITH_DISCONNECT,
+    POW_QUIT
+} powStatus = POW_OUTDATED;
+static ucomm_Pow poww;
+static ucomm_Pow powPrinterPow;
+FILE *powPrinterFile;
+
+static void *
+powPrinter(void *arg)
+{
+    for (;;) {
+        bool quit, disconnect;
+
+        // Wait for power measurement to be ready
+        pthread_mutex_lock(&powMutex);
+        if (powStatus == POW_OUTDATED)
+            pthread_cond_wait(&powStatusCondition, &powMutex);
+
+        quit = powStatus == POW_QUIT;
+        disconnect = powStatus == POW_READY_WITH_DISCONNECT;
+
+        // Power measurement is ready, copy it for our own usage
+        powPrinterPow = poww;
+
+        powStatus = POW_OUTDATED;
+        pthread_mutex_unlock(&powMutex);
+
+        if (quit)
+            return NULL;
+
+        if (disconnect)
+            fprintf(powPrinterFile, "# --- disconnect ---\n");
+
+        fprintf(powPrinterFile, "%u, %u\n",
+                powPrinterPow.voltage,
+                powPrinterPow.current);
+
+        fflush(powPrinterFile);
+    }
+
+    return NULL;
+}
+
 static char help[] =
     "raspi-uart [-h] [-r] [-t TIMEFRAME] [-s SLACK] [-m MLPIPE]\n"
     "\n"
@@ -120,11 +169,12 @@ main(int argc, char *argv[])
 {
     unsigned int slack = 2;
     char mlPipe[512] = "/dev/stdout";
+    char powPipe[512] = "/dev/stdout";
     int c, ret;
     int packetLoss = 0;
     char *endptr;
 
-    while ((c = getopt(argc, argv, "ht:s:m:l:r")) != -1) {
+    while ((c = getopt(argc, argv, "ht:s:m:l:rp:")) != -1) {
         switch (c) {
         case 'h':
             fputs(help, stdout);
@@ -154,6 +204,10 @@ main(int argc, char *argv[])
         case 'r':
             streamMode = true;
             break;
+        case 'p':
+            strncpy(powPipe, optarg, sizeof(powPipe));
+            powPipe[sizeof(powPipe)-1] = '\0';
+            break;
         case '?':
             return 0;
         default:
@@ -168,6 +222,7 @@ main(int argc, char *argv[])
     }
 
     info("mlPipe: %s", mlPipe);
+    info("powPipe: %s", powPipe);
 
     samples = malloc(sizeof(ucomm_Sample) * numSamples);
     if (!samples)
@@ -185,10 +240,19 @@ main(int argc, char *argv[])
     if (streamMode)
         sampleAssembler.ucomm_write = NULL; // NACK sending disabled in stream mode
 
+    // Init pow reader
+    ucomm_PowReader powReader;
+    ucomm_PowReader_init(&powReader);
+
     // Open samplePrinterFile
     samplePrinterFile = fopen(mlPipe, "a");
     if (!samplePrinterFile)
         die("failed to open ml pipe: %s", strerror(errno));
+
+    // Open powPrinterFile
+    powPrinterFile = fopen(powPipe, "a");
+    if (!powPrinterFile)
+        die("failed to open pow pipe: %s", strerror(errno));
 
     // Open UART
     ucomm_initRaspi();
@@ -211,7 +275,13 @@ main(int argc, char *argv[])
     if (ret)
         die("pthread_create failed: %s", strerror(errno));
 
+    pthread_t powPrinterThread;
+    ret = pthread_create(&powPrinterThread, NULL, powPrinter, NULL);
+    if (ret)
+        die("pthread_create failed: %s", strerror(errno));
+
     bool disconnect = false;
+    bool powDisconnect = false;
     unsigned int prevSamplesDropped = sampleAssembler.numSamplesDropped;
     while (!done) {
         ucomm_Message msg;
@@ -220,18 +290,20 @@ main(int argc, char *argv[])
         if (packetLoss != 0 && rand() % 100 < packetLoss)
             continue; // simulate packet loss
 
-        if (!ucomm_SampleAssembler_feed(&sampleAssembler, &msg)) {
+        bool sampleAssemblerFed = ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+        bool powReaderFed = ucomm_PowReader_feed(&powReader, &msg);
+        if (!sampleAssemblerFed && !powReaderFed) {
             info("received unknown message with type %u", msg.header.type);
             continue;
         }
 
-        if (sampleAssembler.disconnect)
+        if (sampleAssemblerFed && sampleAssembler.disconnect)
             disconnect = true;
-        if (sampleAssembler.numSamplesDropped != prevSamplesDropped)
+        if (sampleAssemblerFed && sampleAssembler.numSamplesDropped != prevSamplesDropped)
             disconnect = true;
         prevSamplesDropped = sampleAssembler.numSamplesDropped;
 
-        if (sampleAssembler.ready) {
+        if (sampleAssemblerFed && sampleAssembler.ready) {
             if (!pthread_mutex_trylock(&samplesMutex)) {
                 // Copy samples to shared memory area
                 for (unsigned i = sampleAssembler.start, n = 0; n < sampleAssembler.windowSize; n++) {
@@ -248,6 +320,20 @@ main(int argc, char *argv[])
                 disconnect = true;
             }
         }
+
+        if (powReaderFed && powReader.ready) {
+            if (!pthread_mutex_trylock(&powMutex)) {
+                // Copy pow sample to shared memory area
+                poww = powReader.pow;
+                // Ready for powPrinter thread to read it.
+                powStatus = powDisconnect ? POW_READY_WITH_DISCONNECT : POW_READY;
+                pthread_cond_signal(&powStatusCondition);
+                pthread_mutex_unlock(&powMutex);
+                powDisconnect = false;
+            } else {
+                powDisconnect = true;
+            }
+        }
     }
 
     // Notify samplePrinter to exit
@@ -256,8 +342,17 @@ main(int argc, char *argv[])
     pthread_cond_signal(&samplesStatusCondition);
     pthread_mutex_unlock(&samplesMutex);
 
+    // Notify powPrinter to exit
+    pthread_mutex_lock(&powMutex);
+    powStatus = POW_QUIT;
+    pthread_cond_signal(&powStatusCondition);
+    pthread_mutex_unlock(&powMutex);
+
     // Wait for samplePrinter to exit
     pthread_join(samplePrinterThread, NULL);
+
+    // Wait for powReader to exit
+    pthread_join(powPrinterThread, NULL);
 
     // Print statistics
     info("Number of recovered packets: %u", sampleAssembler.numPacketsRecovered);

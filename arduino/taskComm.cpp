@@ -19,6 +19,7 @@ void
 taskComm(void *pvParameters)
 {
     ucomm_id_t sampleId = 0;
+    ucomm_id_t powId = 0;
 
     for (;;) {
         taskComm_Command cmd;
@@ -43,6 +44,10 @@ taskComm(void *pvParameters)
                 ucomm_writeSampleAcc2(&sampleBuffer.sample[idx], true);
 
             } break;
+        case TASKCOMM_COMMAND_SEND_POW:
+            cmd.sendPow.pow.id = powId++;
+            ucomm_writePow(&cmd.sendPow.pow);
+            break;
         }
     }
 }

@@ -31,7 +31,9 @@ typedef enum {
     UCOMM_MESSAGE_ACC1,
     UCOMM_MESSAGE_ACC1_RESEND,
     UCOMM_MESSAGE_ACC2,
-    UCOMM_MESSAGE_ACC2_RESEND
+    UCOMM_MESSAGE_ACC2_RESEND,
+    // Message types for sending power measurements
+    UCOMM_MESSAGE_POW,
 } ucomm_MessageType;
 
 typedef struct ucomm_MessageHeader {
@@ -57,10 +59,19 @@ typedef struct ucomm_MessageAcc {
 } ucomm_MessageAcc;
 ASSERT_SIZE(ucomm_MessageAcc, 10);
 
+typedef struct ucomm_MessagePow {
+    UCOMM_MESSAGE_HEADER // type = UCOMM_MESSAGE_POW
+    uint16_t voltage;
+    uint16_t current;
+    uint16_t __dummy_crc16;
+} ucomm_MessagePow;
+ASSERT_SIZE(ucomm_MessagePow, 8);
+
 typedef union ucomm_Message {
     ucomm_MessageHeader header;
     ucomm_MessageAcc acc;
     ucomm_MessageSampleNack sampleNack;
+    ucomm_MessagePow pow;
 } ucomm_Message;
 
 typedef struct ucomm_Sample {
@@ -72,6 +83,12 @@ typedef struct ucomm_Sample {
         int16_t x, y, z;
     } acc2;
 } ucomm_Sample;
+
+typedef struct ucomm_Pow {
+    ucomm_id_t id; // Power measurement ID.
+    uint16_t voltage;
+    uint16_t current;
+} ucomm_Pow;
 
 void ucomm_init(userial_write_t, userial_flush_t, userial_read_t);
 
@@ -86,6 +103,8 @@ void ucomm_writeSample(const ucomm_Sample *);
 void ucomm_writeSampleAcc1(const ucomm_Sample *, bool resend);
 
 void ucomm_writeSampleAcc2(const ucomm_Sample *, bool resend);
+
+void ucomm_writePow(const ucomm_Pow *);
 
 void ucomm_print(const ucomm_Message *);
 

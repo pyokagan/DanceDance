@@ -37,6 +37,9 @@ ucomm_write(const ucomm_Message *msg)
     case UCOMM_MESSAGE_ACC2_RESEND:
         msgsize = sizeof(ucomm_MessageAcc);
         break;
+    case UCOMM_MESSAGE_POW:
+        msgsize = sizeof(ucomm_MessagePow);
+        break;
     default:
         return;
     }
@@ -74,5 +77,17 @@ ucomm_writeSampleAcc2(const ucomm_Sample *sample, bool resend)
     msg.acc.x = sample->acc2.x;
     msg.acc.y = sample->acc2.y;
     msg.acc.z = sample->acc2.z;
+    ucomm_write(&msg);
+}
+
+void
+ucomm_writePow(const ucomm_Pow *pow)
+{
+    ucomm_Message msg;
+
+    msg.pow.type = UCOMM_MESSAGE_POW;
+    msg.pow.id = pow->id;
+    msg.pow.voltage = pow->voltage;
+    msg.pow.current = pow->current;
     ucomm_write(&msg);
 }
