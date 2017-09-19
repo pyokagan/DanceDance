@@ -66,8 +66,6 @@ FILE *samplePrinterFile;
 static void *
 samplePrinter(void *arg)
 {
-    bool firstSample = true;
-
     for (;;) {
         bool quit, disconnect;
 
@@ -87,9 +85,6 @@ samplePrinter(void *arg)
         if (quit)
             return NULL;
 
-        if (!firstSample && !streamMode)
-            fprintf(samplePrinterFile, "# ---\n");
-
         if (streamMode && disconnect)
             fprintf(samplePrinterFile, "# --- disconnect ---\n");
 
@@ -108,9 +103,10 @@ samplePrinter(void *arg)
                     samplePrinterSamples[i].gyro2.y,
                     samplePrinterSamples[i].gyro2.z);
         }
-        fflush(samplePrinterFile);
+        if (!streamMode)
+            fprintf(samplePrinterFile, "# ---\n");
 
-        firstSample = false;
+        fflush(samplePrinterFile);
     }
 
     return NULL;
