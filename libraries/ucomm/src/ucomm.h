@@ -32,6 +32,10 @@ typedef enum {
     UCOMM_MESSAGE_ACC1_RESEND,
     UCOMM_MESSAGE_ACC2,
     UCOMM_MESSAGE_ACC2_RESEND,
+    UCOMM_MESSAGE_GYRO1,
+    UCOMM_MESSAGE_GYRO1_RESEND,
+    UCOMM_MESSAGE_GYRO2,
+    UCOMM_MESSAGE_GYRO2_RESEND,
     // Message types for sending power measurements
     UCOMM_MESSAGE_POW,
 } ucomm_MessageType;
@@ -43,6 +47,8 @@ ASSERT_SIZE(ucomm_MessageHeader, 2);
 
 #define UCOMM_SAMPLENACK_ACC1 0x01
 #define UCOMM_SAMPLENACK_ACC2 0x02
+#define UCOMM_SAMPLENACK_GYRO1 0x04
+#define UCOMM_SAMPLENACK_GYRO2 0x08
 
 typedef struct ucomm_MessageSampleNack {
     UCOMM_MESSAGE_HEADER // type = UCOMM_MESSAGE_SAMPLE_NACK
@@ -59,6 +65,13 @@ typedef struct ucomm_MessageAcc {
 } ucomm_MessageAcc;
 ASSERT_SIZE(ucomm_MessageAcc, 10);
 
+typedef struct ucomm_MessageGyro {
+    UCOMM_MESSAGE_HEADER // type = UCOMM_MESSAGE_GYRO1 or UCOMM_MESSAGE_GYRO2
+    int16_t x, y, z;
+    uint16_t __dummy_crc16;
+} ucomm_MessageGyro;
+ASSERT_SIZE(ucomm_MessageGyro, 10);
+
 typedef struct ucomm_MessagePow {
     UCOMM_MESSAGE_HEADER // type = UCOMM_MESSAGE_POW
     uint16_t voltage;
@@ -70,6 +83,7 @@ ASSERT_SIZE(ucomm_MessagePow, 8);
 typedef union ucomm_Message {
     ucomm_MessageHeader header;
     ucomm_MessageAcc acc;
+    ucomm_MessageGyro gyro;
     ucomm_MessageSampleNack sampleNack;
     ucomm_MessagePow pow;
 } ucomm_Message;
@@ -81,7 +95,13 @@ typedef struct ucomm_Sample {
     } acc1;
     struct {
         int16_t x, y, z;
+    } gyro1;
+    struct {
+        int16_t x, y, z;
     } acc2;
+    struct {
+        int16_t x, y, z;
+    } gyro2;
 } ucomm_Sample;
 
 typedef struct ucomm_Pow {
@@ -103,6 +123,10 @@ void ucomm_writeSample(const ucomm_Sample *);
 void ucomm_writeSampleAcc1(const ucomm_Sample *, bool resend);
 
 void ucomm_writeSampleAcc2(const ucomm_Sample *, bool resend);
+
+void ucomm_writeSampleGyro1(const ucomm_Sample *, bool resend);
+
+void ucomm_writeSampleGyro2(const ucomm_Sample *, bool resend);
 
 void ucomm_writePow(const ucomm_Pow *);
 

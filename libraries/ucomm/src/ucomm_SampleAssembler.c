@@ -14,8 +14,10 @@
 
 #define STATE_ACC1 0x01
 #define STATE_ACC2 0x02
+#define STATE_GYRO1 0x04
+#define STATE_GYRO2 0x08
 
-#define STATE_READY (STATE_ACC1 | STATE_ACC2)
+#define STATE_READY (STATE_ACC1 | STATE_ACC2 | STATE_GYRO1 | STATE_GYRO2)
 
 static void
 timespec_diff(const struct timespec *start, const struct timespec *stop,
@@ -71,19 +73,22 @@ ucomm_SampleAssembler_reset(ucomm_SampleAssembler *self)
 }
 
 static bool
-isSampleType(ucomm_type_t type)
-{
-    return type == UCOMM_MESSAGE_ACC1 ||
-        type == UCOMM_MESSAGE_ACC1_RESEND ||
-        type == UCOMM_MESSAGE_ACC2 ||
-        type == UCOMM_MESSAGE_ACC2_RESEND;
-}
-
-static bool
 isSampleResend(ucomm_type_t type)
 {
     return type == UCOMM_MESSAGE_ACC1_RESEND ||
-        type == UCOMM_MESSAGE_ACC2_RESEND;
+        type == UCOMM_MESSAGE_ACC2_RESEND ||
+        type == UCOMM_MESSAGE_GYRO1_RESEND ||
+        type == UCOMM_MESSAGE_GYRO2_RESEND;
+}
+
+static bool
+isSampleType(ucomm_type_t type)
+{
+    return type == UCOMM_MESSAGE_ACC1 ||
+        type == UCOMM_MESSAGE_ACC2 ||
+        type == UCOMM_MESSAGE_GYRO1 ||
+        type == UCOMM_MESSAGE_GYRO2 ||
+        isSampleResend(type);
 }
 
 static bool
@@ -195,6 +200,12 @@ sendNacks(const ucomm_SampleAssembler *self, unsigned int idx)
     if (!(self->state[idx] & STATE_ACC2))
         msg.sampleNack.packetTypes |= UCOMM_SAMPLENACK_ACC2;
 
+    if (!(self->state[idx] & STATE_GYRO1))
+        msg.sampleNack.packetTypes |= UCOMM_SAMPLENACK_GYRO1;
+
+    if (!(self->state[idx] & STATE_GYRO2))
+        msg.sampleNack.packetTypes |= UCOMM_SAMPLENACK_GYRO2;
+
     if (self->ucomm_write)
         self->ucomm_write(&msg);
 }
@@ -280,6 +291,24 @@ ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg
         self->sample[idx].acc2.z = msg->acc.z;
         self->state[idx] |= STATE_ACC2;
         break;
+    case UCOMM_MESSAGE_GYRO1:
+    case UCOMM_MESSAGE_GYRO1_RESEND:
+        if (isResend && !(self->state[idx] & STATE_GYRO1))
+            self->numPacketsRecovered++;
+        self->sample[idx].gyro1.x = msg->gyro.x;
+        self->sample[idx].gyro1.y = msg->gyro.y;
+        self->sample[idx].gyro1.z = msg->gyro.z;
+        self->state[idx] |= STATE_GYRO1;
+        break;
+    case UCOMM_MESSAGE_GYRO2:
+    case UCOMM_MESSAGE_GYRO2_RESEND:
+        if (isResend && !(self->state[idx] & STATE_GYRO2))
+            self->numPacketsRecovered++;
+        self->sample[idx].gyro2.x = msg->gyro.x;
+        self->sample[idx].gyro2.y = msg->gyro.y;
+        self->sample[idx].gyro2.z = msg->gyro.z;
+        self->state[idx] |= STATE_GYRO2;
+        break;
     default:
         // should not occur: isSampleType() should have taken care of this
         break;
@@ -301,9 +330,16 @@ ucomm_SampleAssembler_print(const ucomm_SampleAssembler *self)
 {
     printf("--- start=%u end=%u numReady=%u ready=%d\n", self->start, self->end, self->numReady, self->ready);
     for (unsigned int i = self->start; i != self->end; i = (i + 1) % self->alloc) {
-        printf("%u, id=%u, state=%u, acc1x=%d, acc1y=%d, acc1z=%d, acc2x=%d, acc2y=%d, acc2z=%d\n",
-                i, self->sample[i].id, self->state[i], self->sample[i].acc1.x, self->sample[i].acc1.y,
-                self->sample[i].acc1.z, self->sample[i].acc2.x, self->sample[i].acc2.y, self->sample[i].acc2.z);
+        printf("%u, id=%u, state=%u, "
+                "acc1x=%d, acc1y=%d, acc1z=%d, "
+                "gyro1x=%d, gyro1y=%d, gyro1z=%d "
+                "acc2x=%d, acc2y=%d, acc2z=%d "
+                "gyro2x=%d gyro2y=%d gyro2z=%d\n",
+                i, self->sample[i].id, self->state[i],
+                self->sample[i].acc1.x, self->sample[i].acc1.y, self->sample[i].acc1.z,
+                self->sample[i].gyro1.x, self->sample[i].gyro1.y, self->sample[i].gyro1.z,
+                self->sample[i].acc2.x, self->sample[i].acc2.y, self->sample[i].acc2.z,
+                self->sample[i].gyro2.x, self->sample[i].gyro2.y, self->sample[i].gyro2.z);
     }
     puts("---");
 }

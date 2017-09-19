@@ -37,6 +37,12 @@ ucomm_write(const ucomm_Message *msg)
     case UCOMM_MESSAGE_ACC2_RESEND:
         msgsize = sizeof(ucomm_MessageAcc);
         break;
+    case UCOMM_MESSAGE_GYRO1:
+    case UCOMM_MESSAGE_GYRO1_RESEND:
+    case UCOMM_MESSAGE_GYRO2:
+    case UCOMM_MESSAGE_GYRO2_RESEND:
+        msgsize = sizeof(ucomm_MessageGyro);
+        break;
     case UCOMM_MESSAGE_POW:
         msgsize = sizeof(ucomm_MessagePow);
         break;
@@ -52,6 +58,8 @@ ucomm_writeSample(const ucomm_Sample *sample)
 {
     ucomm_writeSampleAcc1(sample, false);
     ucomm_writeSampleAcc2(sample, false);
+    ucomm_writeSampleGyro1(sample, false);
+    ucomm_writeSampleGyro2(sample, false);
 }
 
 void
@@ -77,6 +85,32 @@ ucomm_writeSampleAcc2(const ucomm_Sample *sample, bool resend)
     msg.acc.x = sample->acc2.x;
     msg.acc.y = sample->acc2.y;
     msg.acc.z = sample->acc2.z;
+    ucomm_write(&msg);
+}
+
+void
+ucomm_writeSampleGyro1(const ucomm_Sample *sample, bool resend)
+{
+    ucomm_Message msg;
+
+    msg.gyro.type = resend ? UCOMM_MESSAGE_GYRO1_RESEND : UCOMM_MESSAGE_GYRO1;
+    msg.gyro.id = sample->id;
+    msg.gyro.x = sample->gyro1.x;
+    msg.gyro.y = sample->gyro1.y;
+    msg.gyro.z = sample->gyro1.z;
+    ucomm_write(&msg);
+}
+
+void
+ucomm_writeSampleGyro2(const ucomm_Sample *sample, bool resend)
+{
+    ucomm_Message msg;
+
+    msg.gyro.type = resend ? UCOMM_MESSAGE_GYRO2_RESEND : UCOMM_MESSAGE_GYRO2;
+    msg.gyro.id = sample->id;
+    msg.gyro.x = sample->gyro2.x;
+    msg.gyro.y = sample->gyro2.y;
+    msg.gyro.z = sample->gyro2.z;
     ucomm_write(&msg);
 }
 

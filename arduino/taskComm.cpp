@@ -43,6 +43,12 @@ taskComm(void *pvParameters)
             if (cmd.resendSample.packetTypes & UCOMM_SAMPLENACK_ACC2)
                 ucomm_writeSampleAcc2(&sampleBuffer.sample[idx], true);
 
+            if (cmd.resendSample.packetTypes & UCOMM_SAMPLENACK_GYRO1)
+                ucomm_writeSampleGyro1(&sampleBuffer.sample[idx], true);
+
+            if (cmd.resendSample.packetTypes & UCOMM_SAMPLENACK_GYRO2)
+                ucomm_writeSampleGyro2(&sampleBuffer.sample[idx], true);
+
             } break;
         case TASKCOMM_COMMAND_SEND_POW:
             cmd.sendPow.pow.id = powId++;

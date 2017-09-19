@@ -94,13 +94,19 @@ samplePrinter(void *arg)
             fprintf(samplePrinterFile, "# --- disconnect ---\n");
 
         for (unsigned i = 0; i < numSamples; i++) {
-            fprintf(samplePrinterFile, "%d, %d, %d, %d, %d, %d\n",
+            fprintf(samplePrinterFile, "%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
                     samplePrinterSamples[i].acc1.x,
                     samplePrinterSamples[i].acc1.y,
                     samplePrinterSamples[i].acc1.z,
+                    samplePrinterSamples[i].gyro1.x,
+                    samplePrinterSamples[i].gyro1.y,
+                    samplePrinterSamples[i].gyro1.z,
                     samplePrinterSamples[i].acc2.x,
                     samplePrinterSamples[i].acc2.y,
-                    samplePrinterSamples[i].acc2.z);
+                    samplePrinterSamples[i].acc2.z,
+                    samplePrinterSamples[i].gyro2.x,
+                    samplePrinterSamples[i].gyro2.y,
+                    samplePrinterSamples[i].gyro2.z);
         }
         fflush(samplePrinterFile);
 
@@ -267,7 +273,10 @@ main(int argc, char *argv[])
     fprintf(samplePrinterFile, "# timeslice=%u, slack=%u, packetLoss=%d%s\n",
             numSamples, slack, packetLoss,
             streamMode ? " STREAM" : "");
-    fprintf(samplePrinterFile, "# acc1x, acc1y, acc1z, acc2x, acc2y, acc2z\n");
+    fprintf(samplePrinterFile, "# acc1x, acc1y, acc1z, "
+            "gyro1x, gyro1y, gyro1z, "
+            "acc2x, acc2y, acc2z, "
+            "gyro2x, gyro2y, gyro2z\n");
     fflush(samplePrinterFile);
 
     pthread_t samplePrinterThread;

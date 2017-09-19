@@ -72,6 +72,16 @@ CHEAT_TEST(works,
     msg.acc.y = 11;
     msg.acc.z = 12;
     ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+    msg.header.type = UCOMM_MESSAGE_GYRO1_RESEND;
+    msg.gyro.x = 100;
+    msg.gyro.y = 101;
+    msg.gyro.z = 102;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+    msg.header.type = UCOMM_MESSAGE_GYRO2_RESEND;
+    msg.gyro.x = 103;
+    msg.gyro.y = 104;
+    msg.gyro.z = 105;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
 
     cheat_assert_unsigned_int(sampleAssembler.numReady, 1);
     cheat_assert_int(sampleAssembler.sample[3].acc1.x, 4);
@@ -80,6 +90,12 @@ CHEAT_TEST(works,
     cheat_assert_int(sampleAssembler.sample[3].acc2.x, 10);
     cheat_assert_int(sampleAssembler.sample[3].acc2.y, 11);
     cheat_assert_int(sampleAssembler.sample[3].acc2.z, 12);
+    cheat_assert_int(sampleAssembler.sample[3].gyro1.x, 100);
+    cheat_assert_int(sampleAssembler.sample[3].gyro1.y, 101);
+    cheat_assert_int(sampleAssembler.sample[3].gyro1.z, 102);
+    cheat_assert_int(sampleAssembler.sample[3].gyro2.x, 103);
+    cheat_assert_int(sampleAssembler.sample[3].gyro2.y, 104);
+    cheat_assert_int(sampleAssembler.sample[3].gyro2.z, 105);
 
     // Complete sample 1
     // numReady should not change since the sample is within the "slack" area
@@ -89,6 +105,16 @@ CHEAT_TEST(works,
     msg.acc.y = 14;
     msg.acc.z = 15;
     ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+    msg.header.type = UCOMM_MESSAGE_GYRO1_RESEND;
+    msg.gyro.x = 106;
+    msg.gyro.y = 107;
+    msg.gyro.z = 108;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+    msg.header.type = UCOMM_MESSAGE_GYRO2_RESEND;
+    msg.gyro.x = 109;
+    msg.gyro.y = 110;
+    msg.gyro.z = 111;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
 
     cheat_assert_unsigned_int(sampleAssembler.numReady, 1);
     cheat_assert_int(sampleAssembler.sample[0].acc1.x, 7);
@@ -97,6 +123,12 @@ CHEAT_TEST(works,
     cheat_assert_int(sampleAssembler.sample[0].acc2.x, 13);
     cheat_assert_int(sampleAssembler.sample[0].acc2.y, 14);
     cheat_assert_int(sampleAssembler.sample[0].acc2.z, 15);
+    cheat_assert_int(sampleAssembler.sample[0].gyro1.x, 106);
+    cheat_assert_int(sampleAssembler.sample[0].gyro1.y, 107);
+    cheat_assert_int(sampleAssembler.sample[0].gyro1.z, 108);
+    cheat_assert_int(sampleAssembler.sample[0].gyro2.x, 109);
+    cheat_assert_int(sampleAssembler.sample[0].gyro2.y, 110);
+    cheat_assert_int(sampleAssembler.sample[0].gyro2.z, 111);
 
     // Complete sample 255
     // The ready flag should now be asserted since we successfully built a
@@ -107,6 +139,16 @@ CHEAT_TEST(works,
     msg.acc.y = 17;
     msg.acc.z = 18;
     ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+    msg.header.type = UCOMM_MESSAGE_GYRO1_RESEND;
+    msg.gyro.x = 112;
+    msg.gyro.y = 113;
+    msg.gyro.z = 114;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+    msg.header.type = UCOMM_MESSAGE_GYRO2_RESEND;
+    msg.gyro.x = 115;
+    msg.gyro.y = 116;
+    msg.gyro.z = 117;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
 
     cheat_assert_unsigned_int(sampleAssembler.numReady, 2);
     cheat_assert(sampleAssembler.ready);
@@ -116,6 +158,12 @@ CHEAT_TEST(works,
     cheat_assert_int(sampleAssembler.sample[2].acc2.x, 16);
     cheat_assert_int(sampleAssembler.sample[2].acc2.y, 17);
     cheat_assert_int(sampleAssembler.sample[2].acc2.z, 18);
+    cheat_assert_int(sampleAssembler.sample[2].gyro1.x, 112);
+    cheat_assert_int(sampleAssembler.sample[2].gyro1.y, 113);
+    cheat_assert_int(sampleAssembler.sample[2].gyro1.z, 114);
+    cheat_assert_int(sampleAssembler.sample[2].gyro2.x, 115);
+    cheat_assert_int(sampleAssembler.sample[2].gyro2.y, 116);
+    cheat_assert_int(sampleAssembler.sample[2].gyro2.z, 117);
 
     // New sample
     msg.header.id = 3;
@@ -160,6 +208,17 @@ CHEAT_TEST(large_window,
 
         msg.header.id = i;
         msg.header.type = UCOMM_MESSAGE_ACC2;
+        ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+
+        msg.header.id = i;
+        msg.header.type = UCOMM_MESSAGE_GYRO1;
+        msg.gyro.x = 4;
+        msg.gyro.y = 5;
+        msg.gyro.z = 6;
+        ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+
+        msg.header.id = i;
+        msg.header.type = UCOMM_MESSAGE_GYRO2;
         ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
     }
 
