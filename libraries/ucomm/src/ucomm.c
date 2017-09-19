@@ -1,9 +1,19 @@
 #include "ucomm.h"
 
 void
-ucomm_init(void)
+ucomm_init(userial_write_t write, userial_flush_t flush, userial_read_t read)
 {
-    userial_init();
+    userial_write = write;
+    userial_flush = flush;
+    userial_read = read;
+}
+
+void
+ucomm_initRaspi(void)
+{
+#ifndef ARDUINO
+    userial_initRaspi();
+#endif
 }
 
 void

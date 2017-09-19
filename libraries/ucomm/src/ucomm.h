@@ -73,7 +73,9 @@ typedef struct ucomm_Sample {
     } acc2;
 } ucomm_Sample;
 
-void ucomm_init(void);
+void ucomm_init(userial_write_t, userial_flush_t, userial_read_t);
+
+void ucomm_initRaspi(void);
 
 void ucomm_read(ucomm_Message *);
 

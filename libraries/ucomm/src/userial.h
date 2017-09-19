@@ -6,19 +6,22 @@
 extern "C" {
 #endif
 
-void userial_init(void);
+void userial_initRaspi(void);
 
 /** Writes `byte` to the UART */
-void userial_write(uint8_t byte);
+typedef void (*userial_write_t)(uint8_t byte);
+extern userial_write_t userial_write;
 
 /* Flushes the write buffer */
-void userial_flush(void);
+typedef void (*userial_flush_t)(void);
+extern userial_flush_t userial_flush;
 
 /**
  * Reads a byte from the UART.
  * Will block if there are no characters in the UART receive buffer
  */
-uint8_t userial_read(void);
+typedef uint8_t (*userial_read_t)(void);
+extern userial_read_t userial_read;
 
 #ifdef __cplusplus
 }

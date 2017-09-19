@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void userialWrite(uint8_t);
+static void userialFlush(void);
+static uint8_t userialRead(void);
+
 static FILE *userial_in;
 static FILE *userial_out;
 
@@ -31,7 +35,7 @@ die(const char *fmt, ...)
 }
 
 void
-userial_init(void)
+userial_initRaspi(void)
 {
     struct termios options;
     int fd, status;
@@ -78,22 +82,26 @@ userial_init(void)
 
     userial_in = fdopen(fd, "r");
     setvbuf(userial_in, NULL, _IOFBF, 16);
+
+    userial_write = userialWrite;
+    userial_flush = userialFlush;
+    userial_read = userialRead;
 }
 
-void
-userial_write(uint8_t byte)
+static void
+userialWrite(uint8_t byte)
 {
     putc(byte, userial_out);
 }
 
-void
-userial_flush(void)
+static void
+userialFlush(void)
 {
     fflush(userial_out);
 }
 
-uint8_t
-userial_read(void)
+static uint8_t
+userialRead(void)
 {
     return getc(userial_in);
 }

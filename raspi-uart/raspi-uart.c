@@ -191,7 +191,7 @@ main(int argc, char *argv[])
         die("failed to open ml pipe: %s", strerror(errno));
 
     // Open UART
-    ucomm_init();
+    ucomm_initRaspi();
 
     // Setup signal handler
     struct sigaction action = {};

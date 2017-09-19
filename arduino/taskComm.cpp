@@ -1,5 +1,6 @@
 #include "taskComm.h"
 #include "SampleBuffer.h"
+#include "uart1.h"
 #include <stdbool.h>
 
 static SampleBuffer sampleBuffer;
@@ -8,7 +9,8 @@ QueueHandle_t taskComm_queue;
 void
 taskComm_setup()
 {
-    ucomm_init();
+    uart1_init();
+    ucomm_init(uart1_write, NULL, uart1_read);
     taskComm_queue = xQueueCreate(100, sizeof(taskComm_Command));
     SampleBuffer_init(&sampleBuffer);
 }

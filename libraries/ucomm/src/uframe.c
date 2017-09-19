@@ -52,7 +52,8 @@ uframe_write(const void *data, uint8_t len)
     uframe_writeByte(checksum >> 8);
     uframe_writeByte(checksum & 0xff);
     userial_write(UFRAME_FLAG_BYTE);
-    userial_flush();
+    if (userial_flush)
+        userial_flush();
 }
 
 uint8_t
