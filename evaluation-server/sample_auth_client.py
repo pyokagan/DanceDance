@@ -25,7 +25,7 @@ class Client:
         padding = b' ' * (AES.block_size - len(msg) % AES.block_size)
         msg = padding + msg
         msg = self.iv + cipher.encrypt(msg)
-        msg = b' ' + base64.b64encode(msg) + b' |'
+        msg = base64.b64encode(msg)
         self.sock.sendall(msg)
 
 
