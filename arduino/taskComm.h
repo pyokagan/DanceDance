@@ -3,7 +3,12 @@
 #include <Arduino.h>
 #include <Arduino_FreeRTOS.h>
 #include <queue.h>
+#include <semphr.h>
 #include <ucomm.h>
+
+extern uint8_t RECV_FLAG;
+
+extern SemaphoreHandle_t lock;
 
 typedef enum {
     TASKCOMM_COMMAND_SEND_SAMPLE,

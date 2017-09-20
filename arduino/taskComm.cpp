@@ -5,6 +5,8 @@
 
 static SampleBuffer sampleBuffer;
 QueueHandle_t taskComm_queue;
+uint8_t RECV_FLAG = 0;
+SemaphoreHandle_t lock = xSemaphoreCreateBinary();
 
 void
 taskComm_setup()
