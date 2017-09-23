@@ -42,18 +42,21 @@ def read_sample_windows(f):
 def parse_sample(line):
     """Parses a sample line, returning its Sample object"""
     comp = (x.strip() for x in line.split(','))
-    return Sample(acc1x=int(next(comp)),
-                  acc1y=int(next(comp)),
-                  acc1z=int(next(comp)),
-                  gyro1x=int(next(comp)),
-                  gyro1y=int(next(comp)),
-                  gyro1z=int(next(comp)),
-                  acc2x=int(next(comp)),
-                  acc2y=int(next(comp)),
-                  acc2z=int(next(comp)),
-                  gyro2x=int(next(comp)),
-                  gyro2y=int(next(comp)),
-                  gyro2z=int(next(comp)))
+    try:
+        return Sample(acc1x=int(next(comp)),
+                      acc1y=int(next(comp)),
+                      acc1z=int(next(comp)),
+                      gyro1x=int(next(comp)),
+                      gyro1y=int(next(comp)),
+                      gyro1z=int(next(comp)),
+                      acc2x=int(next(comp)),
+                      acc2y=int(next(comp)),
+                      acc2z=int(next(comp)),
+                      gyro2x=int(next(comp)),
+                      gyro2y=int(next(comp)),
+                      gyro2z=int(next(comp)))
+    except StopIteration:
+        raise ValueError('not enough elements: ' + line)
 
 
 def main(args, prog=None):
