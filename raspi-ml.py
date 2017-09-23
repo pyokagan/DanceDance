@@ -22,10 +22,10 @@ Sample = collections.namedtuple('Sample', [
 ])
 
 
-def read_sample_frames(f):
-    """Reads sample frames from the file-like object `f`.
+def read_sample_windows(f):
+    """Reads sample windows from the file-like object `f`.
 
-    For each sample frame, yields a list of Samples.
+    For each sample window, yields a list of Samples.
     """
     samples = []
     for line in f:
@@ -63,9 +63,9 @@ def main(args, prog=None):
                    help='output result stream (default: stdout)')
     p.add_argument('input', nargs='?', type=argparse.FileType('r'),
                    default=sys.stdin,
-                   help='input sample frame stream (default: stdin)')
+                   help='input sample window stream (default: stdin)')
     args = p.parse_args(args)
-    for sample_frame in read_sample_frames(args.input):
+    for sample_window in read_sample_windows(args.input):
         time.sleep(1)  # Do some processing
         print('wavehands', file=args.output)  # Print result
 
