@@ -42,7 +42,12 @@ void uart1_write(uint8_t byte)
 
 uint8_t uart1_read(void)
 {
-	if (xSemaphoreTake(lock_read, portMAX_DELAY) == pdTRUE) {
-		return UART1.read();
+	if (UART1.available() > 0) {
+		return UART1.read();	
+	}
+	else {
+		if (xSemaphoreTake(lock_read, portMAX_DELAY) == pdTRUE) {
+			return uart1_read();
+		}
 	}
 }
