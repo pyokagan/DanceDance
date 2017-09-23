@@ -69,8 +69,15 @@ def main(args, prog=None):
                    help='input sample window stream (default: stdin)')
     args = p.parse_args(args)
     for sample_window in read_sample_windows(args.input):
-        time.sleep(1)  # Do some processing
-        print('wavehands', file=args.output)  # Print result
+        # Do some processing
+        time.sleep(1)
+        # Print the detected action to args.output.
+        # Each action printed will be sent to the evaluation server.
+        print('wavehands', file=args.output)
+        # IMPORTANT: Make sure the output is flushed after every action
+        # printed. Otherwise, the action may not be sent immediately due to
+        # buffering.
+        args.output.flush()
 
 
 if __name__ == '__main__':
