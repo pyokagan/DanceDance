@@ -4,11 +4,25 @@
 #include <I2Cdev.h>
 #include <MPU6050.h>
 #include <stdbool.h>
+#include <semphr.h>
+#include <TimerOne.h>
 
 static MPU6050 mpu1(0x68);
 static MPU6050 mpu2(0x69);
 
 static bool mpu1Active, mpu2Active;
+static SemaphoreHandle_t timerLock;
+
+static void
+timerIsr(void)
+{
+    static BaseType_t yieldWhenComplete;
+    yieldWhenComplete = pdFALSE;
+
+    xSemaphoreGiveFromISR(timerLock, &yieldWhenComplete);
+    if (yieldWhenComplete)
+        taskYIELD();
+}
 
 void
 taskI2C_setup()
@@ -25,12 +39,15 @@ taskI2C_setup()
 
     if (mpu2Active)
         mpu2.setDLPFMode(4);
+
+    timerLock = xSemaphoreCreateBinary();
+    Timer1.initialize(23L * 1000L);
+    Timer1.attachInterrupt(timerIsr, 0);
 }
 
 void
 taskI2C(void *pvParameters)
 {
-    TickType_t lastWakeTime = xTaskGetTickCount();
     taskComm_Command cmd;
     cmd.type = TASKCOMM_COMMAND_SEND_SAMPLE;
     cmd.sendSample.sample.acc1.x = 0;
@@ -64,7 +81,6 @@ taskI2C(void *pvParameters)
                     &cmd.sendSample.sample.gyro2.z);
 
         while (!xQueueSendToBack(taskComm_queue, &cmd, portMAX_DELAY));
-
-        vTaskDelayUntil(&lastWakeTime, 23 / portTICK_PERIOD_MS);
+        while (xSemaphoreTake(timerLock, portMAX_DELAY) != pdTRUE);
     }
 }
