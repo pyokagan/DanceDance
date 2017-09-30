@@ -9,6 +9,7 @@ import threading
 import errno
 import queue
 from Crypto.Cipher import AES
+from Crypto import Random
 
 
 class PowerState:
@@ -23,7 +24,8 @@ class EvalClient:
     def __init__(self, address, secret_key):
         if len(secret_key) not in (16, 24, 32):
             raise TypeError('AES key must be either 16, 24, or 32 bytes long')
-        self.iv = bytes(0 for x in range(16))
+        rndfile = Random.new()
+        self.iv = rndfile.read(16)
         self.address = address
         self.secret_key = secret_key
         self.sock = None
