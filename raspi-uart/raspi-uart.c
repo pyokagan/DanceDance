@@ -73,8 +73,10 @@ samplePrinter(void *arg)
 {
     StrBuf sb = STRBUF_INIT;
     int fd;
-    bool firstSample = true;
+    bool firstSample;
 
+reset:
+    firstSample = true;
     fd = open(mlPipe, O_CREAT | O_APPEND | O_WRONLY, 0666);
     if (fd < 0)
         die("failed to open %s: %s", mlPipe, strerror(errno));
@@ -130,8 +132,15 @@ samplePrinter(void *arg)
         samplesStatus = SAMPLES_OUTDATED;
         pthread_mutex_unlock(&samplesMutex);
 
-        if (write_full(fd, sb.buf, sb.len) < 0)
-            die("write to %s failed: %s", mlPipe, strerror(errno));
+        if (write_full(fd, sb.buf, sb.len) < 0) {
+            if (errno == EPIPE) {
+                StrBuf_reset(&sb);
+                close(fd);
+                goto reset;
+            } else {
+                die("write to %s failed: %s", mlPipe, strerror(errno));
+            }
+        }
 
         StrBuf_reset(&sb);
         firstSample = false;
@@ -159,6 +168,7 @@ powPrinter(void *arg)
     StrBuf sb = STRBUF_INIT;
     int fd;
 
+reset:
     fd = open(powPipe, O_CREAT | O_APPEND | O_WRONLY, 0666);
     if (fd < 0)
         die("failed to open %s: %s", powPipe, strerror(errno));
@@ -184,8 +194,15 @@ powPrinter(void *arg)
         powStatus = POW_OUTDATED;
         pthread_mutex_unlock(&powMutex);
 
-        if (write_full(fd, sb.buf, sb.len) < 0)
-            die("write to %s failed: %s", powPipe, strerror(errno));
+        if (write_full(fd, sb.buf, sb.len) < 0) {
+            if (errno == EPIPE) {
+                StrBuf_reset(&sb);
+                close(fd);
+                goto reset;
+            } else {
+                die("write to %s failed: %s", powPipe, strerror(errno));
+            }
+        }
 
         StrBuf_reset(&sb);
     }
@@ -278,6 +295,7 @@ main(int argc, char *argv[])
     struct sigaction action = {};
     action.sa_handler = onTerm;
     sigaction(SIGINT, &action, NULL);
+    signal(SIGPIPE, SIG_IGN);
 
     pthread_t samplePrinterThread;
     ret = pthread_create(&samplePrinterThread, NULL, samplePrinter, NULL);
