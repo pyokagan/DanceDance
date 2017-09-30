@@ -8,6 +8,8 @@ import argparse
 import threading
 import errno
 import queue
+import traceback
+import os
 from Crypto.Cipher import AES
 from Crypto import Random
 
@@ -77,6 +79,13 @@ class EvalServerThread(threading.Thread):
         self.interval = interval  # Connection interval (in s)
 
     def run(self):
+        try:
+            self._run()
+        except:
+            traceback.print_exc()
+            os._exit(1)
+
+    def _run(self):
         while True:
             while not self.client.is_connected:
                 print('connecting to', self.client.address, file=sys.stderr)
@@ -108,8 +117,12 @@ class MlThread(threading.Thread):
         self.action_queue = action_queue
 
     def run(self):
-        while True:
-            self.run_one()
+        try:
+            while True:
+                self.run_one()
+        except:
+            traceback.print_exc()
+            os._exit(1)
 
     def run_one(self):
         print('opening', self.filepath, '...', file=sys.stderr)
@@ -145,8 +158,12 @@ class PowThread(threading.Thread):
         return sensor_value / (10 * RS)
 
     def run(self):
-        while True:
-            self.run_one()
+        try:
+            while True:
+                self.run_one()
+        except:
+            traceback.print_exc()
+            os._exit(1)
 
     def run_one(self):
         print('opening', self.filepath, '...', file=sys.stderr)
@@ -169,6 +186,13 @@ class CumpowerThread(threading.Thread):
         self.pow_state = pow_state
 
     def run(self):
+        try:
+            self._run()
+        except:
+            traceback.print_exc()
+            os._exit(1)
+
+    def _run(self):
         while True:
             with self.pow_state.lock:
                 self.pow_state.cumpower += (self.pow_state.voltage *
