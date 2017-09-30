@@ -77,9 +77,11 @@ samplePrinter(void *arg)
 
 reset:
     firstSample = true;
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     fd = open(mlPipe, O_CREAT | O_APPEND | O_WRONLY, 0666);
     if (fd < 0)
         die("failed to open %s: %s", mlPipe, strerror(errno));
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
     for (;;) {
         // Wait for timeslice to be ready
@@ -169,9 +171,11 @@ powPrinter(void *arg)
     int fd;
 
 reset:
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     fd = open(powPipe, O_CREAT | O_APPEND | O_WRONLY, 0666);
     if (fd < 0)
         die("failed to open %s: %s", powPipe, strerror(errno));
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
     for (;;) {
         // Wait for power measurement to be ready
@@ -368,12 +372,16 @@ main(int argc, char *argv[])
     samplesStatus = SAMPLES_QUIT;
     pthread_cond_signal(&samplesStatusCondition);
     pthread_mutex_unlock(&samplesMutex);
+    if (pthread_cancel(samplePrinterThread) < 0)
+        die("failed to cancel samplePrinterThread: %s", strerror(errno));
 
     // Notify powPrinter to exit
     pthread_mutex_lock(&powMutex);
     powStatus = POW_QUIT;
     pthread_cond_signal(&powStatusCondition);
     pthread_mutex_unlock(&powMutex);
+    if (pthread_cancel(powPrinterThread) < 0)
+        die("failed to cancel powPrinterThread: %s", strerror(errno));
 
     // Wait for samplePrinter to exit
     pthread_join(samplePrinterThread, NULL);
