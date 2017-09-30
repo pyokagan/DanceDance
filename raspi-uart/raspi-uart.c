@@ -11,21 +11,7 @@
 #include <ucomm.h>
 #include <ucomm_SampleAssembler.h>
 #include <ucomm_PowReader.h>
-
-__attribute__((noreturn))
-static void
-die(const char *fmt, ...)
-{
-    char buf[1024];
-    va_list va;
-
-    va_start(va, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, va);
-    va_end(va);
-
-    fprintf(stderr, "FATAL: %s\n", buf);
-    abort();
-}
+#include "die.h"
 
 static void
 info(const char *fmt, ...)
