@@ -15,8 +15,8 @@ from Crypto import Random
 class PowerState:
     def __init__(self):
         self.lock = threading.Lock()
-        self.voltage = 0
-        self.current = 0
+        self.voltage = 0.0  # voltage (in V)
+        self.current = 0.0  # current (in A)
         self.cumpower = 0
 
 
@@ -130,6 +130,20 @@ class PowThread(threading.Thread):
         self.filepath = filepath
         self.pow_state = pow_state
 
+    def to_current(self, sensor_value):
+        "Converts the raw sensor value to current (in A)"
+
+        VOLTAGE_REF = 5
+        RS = 10  # Shunt resistor value (in ohms)
+
+        # Remap the ADC value into a voltage number
+        sensor_value = (sensor_value * VOLTAGE_REF) / 1023
+
+        # Follow the equation given by the INA169 datasheet to determine
+        # the current flowing through RS. Assume RL = 10k
+        # Is = (Vout * 1k) / (RS * RL)
+        return sensor_value / (10 * RS)
+
     def run(self):
         while True:
             self.run_one()
@@ -139,12 +153,12 @@ class PowThread(threading.Thread):
         with open(self.filepath, 'r') as f:
             print('opened', self.filepath, file=sys.stderr)
             for line in f:
-                voltage, current = [x.strip() for x in line.split(',')]
+                voltage, raw_current = [x.strip() for x in line.split(',')]
                 voltage = int(voltage)
-                current = int(current)
+                raw_current = int(raw_current)
                 with self.pow_state.lock:
                     self.pow_state.voltage = voltage
-                    self.pow_state.current = current
+                    self.pow_state.current = self.to_current(raw_current)
 
 
 class CumpowerThread(threading.Thread):
