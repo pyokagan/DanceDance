@@ -8,10 +8,12 @@
 #include <errno.h>
 #include <time.h>
 #include <pthread.h>
+#include <fcntl.h>
 #include <ucomm.h>
 #include <ucomm_SampleAssembler.h>
 #include <ucomm_PowReader.h>
 #include "die.h"
+#include "StrBuf.h"
 
 static void
 info(const char *fmt, ...)
@@ -24,6 +26,22 @@ info(const char *fmt, ...)
     va_end(va);
 
     fprintf(stderr, "%s\n", buf);
+}
+
+static int
+write_full(int fd, const char *buf, size_t count)
+{
+    while (count) {
+        ssize_t nbytes = write(fd, buf, count);
+        if (nbytes < 0) {
+            if (errno == EAGAIN || errno == EINTR)
+                continue;
+            return -1;
+        }
+        count -= nbytes;
+        buf += nbytes;
+    }
+    return 0;
 }
 
 static volatile sig_atomic_t done;
@@ -39,6 +57,8 @@ static bool streamMode = false;
 static pthread_mutex_t samplesMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t samplesStatusCondition = PTHREAD_COND_INITIALIZER;
 static unsigned int numSamples = 63;
+static unsigned int slack = 2;
+static int packetLoss = 0;
 static enum {
     SAMPLES_OUTDATED,
     SAMPLES_READY,
@@ -46,55 +66,79 @@ static enum {
     SAMPLES_QUIT
 } samplesStatus = SAMPLES_OUTDATED;
 static ucomm_Sample *samples;
-static ucomm_Sample *samplePrinterSamples;
-FILE *samplePrinterFile;
+char mlPipe[512] = "/dev/stdout";
 
 static void *
 samplePrinter(void *arg)
 {
-    for (;;) {
-        bool quit, disconnect;
+    StrBuf sb = STRBUF_INIT;
+    int fd;
+    bool firstSample = true;
 
+    fd = open(mlPipe, O_CREAT | O_APPEND | O_WRONLY, 0666);
+    if (fd < 0)
+        die("failed to open %s: %s", mlPipe, strerror(errno));
+
+    for (;;) {
         // Wait for timeslice to be ready
         pthread_mutex_lock(&samplesMutex);
         if (samplesStatus == SAMPLES_OUTDATED)
             pthread_cond_wait(&samplesStatusCondition, &samplesMutex);
 
-        quit = samplesStatus == SAMPLES_QUIT;
-        disconnect = samplesStatus == SAMPLES_READY_WITH_DISCONNECT;
+        if (samplesStatus == SAMPLES_QUIT) {
+            pthread_mutex_unlock(&samplesMutex);
+            break;
+        }
 
-        // Samples are ready, copy them for our private usage
-        memcpy(samplePrinterSamples, samples, sizeof(ucomm_Sample) * numSamples);
+        bool disconnect = samplesStatus == SAMPLES_READY_WITH_DISCONNECT;
+
+        if (firstSample) {
+            // Write header
+            StrBuf_addf(&sb, "# ===========================================\n");
+            StrBuf_addf(&sb, "# timeslice=%u, slack=%u, packetLoss=%d%s\n",
+                numSamples, slack, packetLoss,
+                streamMode ? " STREAM" : "");
+            StrBuf_addf(&sb, "# acc1x, acc1y, acc1z, "
+                "gyro1x, gyro1y, gyro1z, "
+                "acc2x, acc2y, acc2z, "
+                "gyro2x, gyro2y, gyro2z\n");
+        }
+
+        if (streamMode && disconnect)
+            StrBuf_addf(&sb, "# --- disconnect ---\n");
+
+        for (unsigned i = 0; i < numSamples; i++) {
+            StrBuf_addf(&sb,
+                    "%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
+                    samples[i].acc1.x,
+                    samples[i].acc1.y,
+                    samples[i].acc1.z,
+                    samples[i].gyro1.x,
+                    samples[i].gyro1.y,
+                    samples[i].gyro1.z,
+                    samples[i].acc2.x,
+                    samples[i].acc2.y,
+                    samples[i].acc2.z,
+                    samples[i].gyro2.x,
+                    samples[i].gyro2.y,
+                    samples[i].gyro2.z);
+        }
+
+        if (!streamMode)
+            StrBuf_addf(&sb, "# ---\n");
+
         samplesStatus = SAMPLES_OUTDATED;
         pthread_mutex_unlock(&samplesMutex);
 
-        if (quit)
-            return NULL;
+        if (write_full(fd, sb.buf, sb.len) < 0)
+            die("write to %s failed: %s", mlPipe, strerror(errno));
 
-        if (streamMode && disconnect)
-            fprintf(samplePrinterFile, "# --- disconnect ---\n");
-
-        for (unsigned i = 0; i < numSamples; i++) {
-            fprintf(samplePrinterFile, "%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
-                    samplePrinterSamples[i].acc1.x,
-                    samplePrinterSamples[i].acc1.y,
-                    samplePrinterSamples[i].acc1.z,
-                    samplePrinterSamples[i].gyro1.x,
-                    samplePrinterSamples[i].gyro1.y,
-                    samplePrinterSamples[i].gyro1.z,
-                    samplePrinterSamples[i].acc2.x,
-                    samplePrinterSamples[i].acc2.y,
-                    samplePrinterSamples[i].acc2.z,
-                    samplePrinterSamples[i].gyro2.x,
-                    samplePrinterSamples[i].gyro2.y,
-                    samplePrinterSamples[i].gyro2.z);
-        }
-        if (!streamMode)
-            fprintf(samplePrinterFile, "# ---\n");
-
-        fflush(samplePrinterFile);
+        StrBuf_reset(&sb);
+        firstSample = false;
     }
 
+    StrBuf_release(&sb);
+    close(fd);
     return NULL;
 }
 
@@ -107,42 +151,47 @@ static enum {
     POW_QUIT
 } powStatus = POW_OUTDATED;
 static ucomm_Pow poww;
-static ucomm_Pow powPrinterPow;
-FILE *powPrinterFile;
+char powPipe[512] = "/dev/stdout";
 
 static void *
 powPrinter(void *arg)
 {
-    for (;;) {
-        bool quit, disconnect;
+    StrBuf sb = STRBUF_INIT;
+    int fd;
 
+    fd = open(powPipe, O_CREAT | O_APPEND | O_WRONLY, 0666);
+    if (fd < 0)
+        die("failed to open %s: %s", powPipe, strerror(errno));
+
+    for (;;) {
         // Wait for power measurement to be ready
         pthread_mutex_lock(&powMutex);
         if (powStatus == POW_OUTDATED)
             pthread_cond_wait(&powStatusCondition, &powMutex);
 
-        quit = powStatus == POW_QUIT;
-        disconnect = powStatus == POW_READY_WITH_DISCONNECT;
+        if (powStatus == POW_QUIT) {
+            pthread_mutex_unlock(&powMutex);
+            break;
+        }
 
-        // Power measurement is ready, copy it for our own usage
-        powPrinterPow = poww;
+        bool disconnect = powStatus == POW_READY_WITH_DISCONNECT;
+
+        if (disconnect)
+            StrBuf_addf(&sb, "# --- disconnect ---\n");
+
+        StrBuf_addf(&sb, "%u, %u\n", poww.voltage, poww.current);
 
         powStatus = POW_OUTDATED;
         pthread_mutex_unlock(&powMutex);
 
-        if (quit)
-            return NULL;
+        if (write_full(fd, sb.buf, sb.len) < 0)
+            die("write to %s failed: %s", powPipe, strerror(errno));
 
-        if (disconnect)
-            fprintf(powPrinterFile, "# --- disconnect ---\n");
-
-        fprintf(powPrinterFile, "%u, %u\n",
-                powPrinterPow.voltage,
-                powPrinterPow.current);
-
-        fflush(powPrinterFile);
+        StrBuf_reset(&sb);
     }
 
+    StrBuf_release(&sb);
+    close(fd);
     return NULL;
 }
 
@@ -155,11 +204,7 @@ static char help[] =
 int
 main(int argc, char *argv[])
 {
-    unsigned int slack = 2;
-    char mlPipe[512] = "/dev/stdout";
-    char powPipe[512] = "/dev/stdout";
     int c, ret;
-    int packetLoss = 0;
     char *endptr;
 
     while ((c = getopt(argc, argv, "ht:s:m:l:rp:")) != -1) {
@@ -209,14 +254,8 @@ main(int argc, char *argv[])
         slack = 1;
     }
 
-    info("mlPipe: %s", mlPipe);
-    info("powPipe: %s", powPipe);
-
     samples = malloc(sizeof(ucomm_Sample) * numSamples);
     if (!samples)
-        die("out of memory");
-    samplePrinterSamples = malloc(sizeof(ucomm_Sample) * numSamples);
-    if (!samplePrinterSamples)
         die("out of memory");
 
     // Init random
@@ -232,16 +271,6 @@ main(int argc, char *argv[])
     ucomm_PowReader powReader;
     ucomm_PowReader_init(&powReader);
 
-    // Open samplePrinterFile
-    samplePrinterFile = fopen(mlPipe, "a");
-    if (!samplePrinterFile)
-        die("failed to open ml pipe: %s", strerror(errno));
-
-    // Open powPrinterFile
-    powPrinterFile = fopen(powPipe, "a");
-    if (!powPrinterFile)
-        die("failed to open pow pipe: %s", strerror(errno));
-
     // Open UART
     ucomm_initRaspi();
 
@@ -249,17 +278,6 @@ main(int argc, char *argv[])
     struct sigaction action = {};
     action.sa_handler = onTerm;
     sigaction(SIGINT, &action, NULL);
-
-    // Write header to samplePrinterFile
-    fprintf(samplePrinterFile, "# ===========================================\n");
-    fprintf(samplePrinterFile, "# timeslice=%u, slack=%u, packetLoss=%d%s\n",
-            numSamples, slack, packetLoss,
-            streamMode ? " STREAM" : "");
-    fprintf(samplePrinterFile, "# acc1x, acc1y, acc1z, "
-            "gyro1x, gyro1y, gyro1z, "
-            "acc2x, acc2y, acc2z, "
-            "gyro2x, gyro2y, gyro2z\n");
-    fflush(samplePrinterFile);
 
     pthread_t samplePrinterThread;
     ret = pthread_create(&samplePrinterThread, NULL, samplePrinter, NULL);
