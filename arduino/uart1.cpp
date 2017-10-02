@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <Arduino_FreeRTOS.h>
 #include <semphr.h>
+#include <task.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <HardwareSerial.h>
@@ -49,7 +50,9 @@ uart1_init(void)
 void
 uart1_write(uint8_t byte)
 {
+    taskENTER_CRITICAL();
     UART1.write(byte);
+    taskEXIT_CRITICAL();
 }
 
 uint8_t
