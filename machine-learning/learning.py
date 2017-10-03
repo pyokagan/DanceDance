@@ -44,7 +44,7 @@ def get_user_input():
 		sample = [float(x.strip()) for x in user_input.split()]
 		segment.append(sample)
 
-def cross_validate(data_x, data_y, n_splits=2, outputFile):
+def cross_validate(outputFile, data_x, data_y, n_splits=2):
 	kf = KFold(n_splits=n_splits)
 	svm_avg = 0
 	knn_avg = 0
@@ -67,7 +67,7 @@ def evaluate_knn_classifier(test_input, test_output, outputFile):
 	test_prediction = clf_knn.predict(test_input)
 	outputFile.write("Accuracy: " + str(accuracy_score(test_output, test_prediction)) + '\n')
 	conf_matrix = confusion_matrix(test_output, test_prediction)
-	outputFile.write("Confusion Matrix: ", conf_matrix)
+	outputFile.write("Confusion Matrix: " + str(conf_matrix))
 	outputFile.write('\n\n')
 
 def evaluate_svm_classifier(test_input, test_output, outputFile):
@@ -77,7 +77,7 @@ def evaluate_svm_classifier(test_input, test_output, outputFile):
 	test_prediction = clf_svm.predict(test_input)
 	outputFile.write("Accuracy: " + str(accuracy_score(test_output, test_prediction)) + '\n')
 	conf_matrix = confusion_matrix(test_output, test_prediction)
-	outputFile.write("Confusion Matrix: ", conf_matrix)
+	outputFile.write("Confusion Matrix: " + str(conf_matrix))
 	outputFile.write('\n\n')
 
 def extract_segment_features(segment, number_of_triaxes=2):
@@ -95,13 +95,13 @@ def extract_features(np_input):
 		features.append(extract_segment_features(np.array(segment), 5))
 	return np.array(features)
 
-def train_svm_model(input_segment_list, output_dance_moves):
+def train_svm_model(input_segment_list, output_dance_moves, outputFile):
 	"""Trains an SVM model with the given inputs and outputs."""
 	X = extract_features(np.array(input_segment_list))
 	X = imputer.fit_transform(X) # Consideration for missing data
 	y = output_dance_moves
 	scaler.fit(X)
-	cross_validate(scaler.transform(X), y, 4)
+	cross_validate(outputFile, scaler.transform(X), y, 4)
 	clf_svm.fit(scaler.transform(X), y)
 	clf_knn.fit(scaler.transform(X), y)
 
@@ -153,7 +153,7 @@ def get_data_set(filename):
 		for row in reader:
 			activity = int(row['activity'])
 			if activity > 0:
-				raw_data.append([float(row['acc1_X']), float(row['acc1_Y']), float(row['acc1_Z']), float(row['gyro1_X']), float(row['gyro1_Y']), float(row['gyro1_Z'], float(row['acc2_X']), float(row['acc2_Y']), float(row['acc2_Z']), float(row['gyro2_X']), float(row['gyro2_Y']), float(row['gyro2_Z']), activity])
+				raw_data.append([float(row['acc1_X']), float(row['acc1_Y']), float(row['acc1_Z']), float(row['gyro1_X']), float(row['gyro1_Y']), float(row['gyro1_Z']), float(row['acc2_X']), float(row['acc2_Y']), float(row['acc2_Z']), float(row['gyro2_X']), float(row['gyro2_Y']), float(row['gyro2_Z']), activity])
 	csvfile.close()
 
 	segmented_data = segment_by_count(raw_data)
@@ -165,7 +165,7 @@ def get_data_set(filename):
 
 train_input, train_output, test_input, test_output = get_data_set(filename='data.csv')
 outputFile = open('outputs.txt', 'w')
-train_svm_model(train_input, train_output)
+train_svm_model(train_input, train_output, outputFile)
 evaluate_svm_classifier(test_input, test_output, outputFile)
 evaluate_knn_classifier(test_input, test_output, outputFile)
 outputFile.close()
