@@ -25,11 +25,11 @@ def predict(raw_data):
 	features = scaler.transform(imputer.fit_transform(np.reshape(features, (1, -1))))
 	raw_output = clf_svm.predict(features)
 	raw_output1 = clf_knn.predict(features)
-	print "From SVM: ", raw_output
-	print "From KNN:", raw_output1
+	print("From SVM: " + str(raw_output))
+	print("From KNN:" + str(raw_output1))
 
 def get_user_input():
-	print "Enter Segment to Analyse"
+	print("Enter Segment to Analyse")
 	segment = []
 	while True:
 		user_input = raw_input()
