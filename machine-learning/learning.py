@@ -183,7 +183,7 @@ def get_data_set(filename):
 
 	segmented_data = segment(raw_data)
 	raw_x, raw_y = split_x_y(segmented_data)
-	train_size = int(0.7 * len(raw_y))
+	train_size = int(0.75 * len(raw_y))
 	train_x, test_x = raw_x[0:train_size], raw_x[train_size: len(raw_y)]
 	train_y, test_y = raw_y[0:train_size], raw_y[train_size: len(raw_y)]
 	return np.array(train_x), np.array(train_y), np.array(test_x), np.array(test_y)
