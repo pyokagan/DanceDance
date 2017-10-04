@@ -17,7 +17,7 @@ import csv, datetime, random
 
 scaler = StandardScaler() # Standardization for ML model
 clf_svm = svm.SVC()
-clf_knn = neighbors.KNeighborsClassifier(n_neighbors=20)
+clf_knn = neighbors.KNeighborsClassifier(n_neighbors=8)
 imputer = Imputer()
 
 def predict(raw_data):
@@ -57,8 +57,8 @@ def cross_validate(outputFile, data_x, data_y, n_splits=2):
 		clf_knn = neighbors.KNeighborsClassifier(n_neighbors=20)
 		clf_knn.fit(X_train, y_train)
 		knn_avg += clf_knn.score(X_test, y_test)
-	outputFile.write("Avg SVM score:" + str(svm_avg/n_splits))
-	outputFile.write("Avg KNN score:" + str(knn_avg/n_splits))
+	outputFile.write("Avg SVM score:" + str(svm_avg/n_splits) + "\n")
+	outputFile.write("Avg KNN score:" + str(knn_avg/n_splits) + "\n\n")
 
 def evaluate_knn_classifier(test_input, test_output, outputFile):
 	outputFile.write("Classifying using KNN:")
@@ -118,11 +118,12 @@ def split_x_y(segments):
 	segment_y = []
 	count = 0
 	for segment in segments:
-		segment_x.append([])
-		for sample in segment:
-			segment_x[count].append(sample[0:-1])
-		segment_y.append(segment[0][-1])
-		count += 1
+		if len(segment) > 0:
+			segment_x.append([])
+			for sample in segment:
+				segment_x[count].append(sample[0:-1])
+			segment_y.append(segment[0][-1])
+			count += 1
 	return segment_x, segment_y
 
 def is_new_count_segment(new_index, first_index, new_label, old_label, sampling=50):
@@ -147,7 +148,7 @@ def segment_by_count(raw_data):
 	return segments
 
 def has_pound(pound_holder):
-	return pound_holder.startswith('#');
+	return type(pound_holder) is str and pound_holder.startswith('#')
 
 def is_new_segment(new_label, old_label, pound_holder):
 	return (new_label != old_label) or has_pound(pound_holder)
@@ -175,14 +176,14 @@ def get_data_set(filename):
 			first_field = row['acc1x'];
 			# if not first_field.startswith('#') and activity > 0:
 			if first_field.startswith('#'):
-				raw_data.append('#')
+				raw_data.append(['#'])
 			else:
 				raw_data.append([float(row['acc1x']), float(row['acc1y']), float(row['acc1z']), float(row['gyro1x']), float(row['gyro1y']), float(row['gyro1z']), float(row['acc2x']), float(row['acc2y']), float(row['acc2z']), float(row['gyro2x']), float(row['gyro2y']), float(row['gyro2z']), activity])
 	csvfile.close()
 
 	segmented_data = segment(raw_data)
 	raw_x, raw_y = split_x_y(segmented_data)
-	train_size = int(0.8 * len(raw_y))
+	train_size = int(0.75 * len(raw_y))
 	train_x, test_x = raw_x[0:train_size], raw_x[train_size: len(raw_y)]
 	train_y, test_y = raw_y[0:train_size], raw_y[train_size: len(raw_y)]
 	return np.array(train_x), np.array(train_y), np.array(test_x), np.array(test_y)
