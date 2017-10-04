@@ -146,17 +146,41 @@ def segment_by_count(raw_data):
 	random.shuffle(segments)
 	return segments
 
+def has_pound(pound_holder):
+	return pound_holder.startswith('#');
+
+def is_new_segment(new_label, old_label, pound_holder):
+	return (new_label != old_label) or has_pound(pound_holder)
+
+def segment(raw_data):
+	segments = []
+	current_segment = 0
+	segments.append([raw_data[0]])
+	for index in range(1, len(raw_data), 1):
+		if is_new_segment(raw_data[index][-1], raw_data[index-1][-1], raw_data[index][0]):
+			current_segment += 1
+			segments.append([])
+		if has_pound(raw_data[index][0]):
+			continue
+		segments[current_segment].append(raw_data[index])
+	random.shuffle(segments)
+	return segments
+
 def get_data_set(filename):
 	raw_data = []
 	with open(filename,'rb') as csvfile:
 		reader = csv.DictReader(csvfile)
 		for row in reader:
 			activity = int(row['activity'])
-			if activity > 0:
+			first_field = row['acc1_X'];
+			# if not first_field.startswith('#') and activity > 0:
+			if first_field.startswith('#'):
+				raw_data.append('#')
+			else:
 				raw_data.append([float(row['acc1_X']), float(row['acc1_Y']), float(row['acc1_Z']), float(row['gyro1_X']), float(row['gyro1_Y']), float(row['gyro1_Z']), float(row['acc2_X']), float(row['acc2_Y']), float(row['acc2_Z']), float(row['gyro2_X']), float(row['gyro2_Y']), float(row['gyro2_Z']), activity])
 	csvfile.close()
 
-	segmented_data = segment_by_count(raw_data)
+	segmented_data = segment(raw_data)
 	raw_x, raw_y = split_x_y(segmented_data)
 	train_size = int(0.8 * len(raw_y))
 	train_x, test_x = raw_x[0:train_size], raw_x[train_size: len(raw_y)]
