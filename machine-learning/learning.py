@@ -172,12 +172,12 @@ def get_data_set(filename):
 		reader = csv.DictReader(csvfile)
 		for row in reader:
 			activity = int(row['activity'])
-			first_field = row['acc1_X'];
+			first_field = row['acc1x'];
 			# if not first_field.startswith('#') and activity > 0:
 			if first_field.startswith('#'):
 				raw_data.append('#')
 			else:
-				raw_data.append([float(row['acc1_X']), float(row['acc1_Y']), float(row['acc1_Z']), float(row['gyro1_X']), float(row['gyro1_Y']), float(row['gyro1_Z']), float(row['acc2_X']), float(row['acc2_Y']), float(row['acc2_Z']), float(row['gyro2_X']), float(row['gyro2_Y']), float(row['gyro2_Z']), activity])
+				raw_data.append([float(row['acc1x']), float(row['acc1y']), float(row['acc1z']), float(row['gyro1x']), float(row['gyro1y']), float(row['gyro1z']), float(row['acc2x']), float(row['acc2y']), float(row['acc2z']), float(row['gyro2x']), float(row['gyro2y']), float(row['gyro2z']), activity])
 	csvfile.close()
 
 	segmented_data = segment(raw_data)
