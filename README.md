@@ -67,3 +67,5 @@ Clone the git repository into the raspberry pi and run `make` in the relevant di
         ```
 
         where `192.168.3.2` is your desired static IP.
+
+        There is no need to specify a `routers` or `domain_name_servers`.
