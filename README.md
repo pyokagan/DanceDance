@@ -27,3 +27,43 @@ You can either compile/upload it with the Arduino IDE or with `make`.
 Clone the git repository into the raspberry pi and run `make` in the relevant directories to compile the relevant software:
 
 * `raspi-monitor`: A simple program which prints all incoming UART communication frames to stdout.
+
+## Set up Raspberry Pi
+
+1. Write the Raspbian Image to the Raspberry Pi, i.e.
+
+    ```
+    dd bs=4M if=2017-08-16-raspbian-stretch-lite.img of=/dev/sdX oflag=sync status=progress
+    partprobe /dev/sdX
+    ```
+
+1. Mount the `/boot` partition of the SD card.
+
+    1. Create an empty `ssh` file in the `/boot` partition, i.e. (in the mounted `/boot` partition directory)
+
+        ```
+        sudo touch ssh
+        ```
+
+    1. Open `/boot/cmdline.txt` and:
+
+        * Remove the console entry that refers to `serial0`, i.e. `console=serial0,115200`.
+        * Append `net.ifnames=0` to the end.
+
+    1. Open `/boot/config.txt`, and add the following line to the end of the file:
+
+        ```
+        dtoverlay=pi3-disable-bt
+        ```
+ 
+1. Mount the root partition of the SD card.
+
+    1. Open `/etc/dhcpcd.conf`, and look for the following similar lines and modify it such that it looks like:
+
+        ```
+        # Example static IP configuration:
+        interface eth0
+        static ip_address=192.168.3.2/24
+        ```
+
+        where `192.168.3.2` is your desired static IP.
