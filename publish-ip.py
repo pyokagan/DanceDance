@@ -45,6 +45,7 @@ def monitor():
 
 def install():
     systemd_path = os.path.expanduser('~/.config/systemd/user')
+    os.makedirs(systemd_path, exist_ok=True)
     target_path = os.path.join(systemd_path, 'default.target')
     unit_path = os.path.join(systemd_path, 'publiship.service')
     with open(unit_path, 'w') as f:
