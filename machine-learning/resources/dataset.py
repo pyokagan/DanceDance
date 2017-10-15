@@ -1,6 +1,9 @@
 import numpy as np
-import csv
+import csv, glob
+from activity import getActivityId
 from segment import segment
+
+raw_data = []
 
 def split_x_y(segments):
 	segment_x = []
@@ -15,21 +18,31 @@ def split_x_y(segments):
 			count += 1
 	return segment_x, segment_y
 
-def getData(filename):
-	raw_data = []
-	with open(filename,'rb') as csvfile:
+def readCsvFile(filename):
+	activity_name = (filename.split('/')[-1]).split('.')[0]
+	activity_id = getActivityId(activity_name)
+	print activity_name + ' %%'
+	if activity_id < 0:
+		return
+	with open(filename, 'rb') as csvfile:
 		reader = csv.DictReader(csvfile)
 		for row in reader:
-			activity = int(row['activity'])
 			first_field = row['acc1x'];
-			# if not first_field.startswith('#') and activity > 0:
-			if first_field.startswith('#'):
-				raw_data.append(['#'])
-			else:
-				raw_data.append([float(row['acc1x']), float(row['acc1y']), float(row['acc1z']), float(row['gyro1x']), float(row['gyro1y']), float(row['gyro1z']), float(row['acc2x']), float(row['acc2y']), float(row['acc2z']), float(row['gyro2x']), float(row['gyro2y']), float(row['gyro2z']), activity])
+			if not first_field.startswith('#') and activity_id > 0:
+				raw_data.append([float(row['acc2x']), float(row['acc2y']), float(row['acc2z']), float(row['gyro2x']), float(row['gyro2y']), float(row['gyro2z']), activity_id])
 	csvfile.close()
+	print len(raw_data)
 
+def loadCsvFiles(folder):
+	path = folder + '/*.csv'
+	for filename in glob.glob(path):
+		readCsvFile(filename)
+
+def getData(foldername):
+	loadCsvFiles(foldername)
 	segmented_data = segment(raw_data)
+	print len(segmented_data)
+	# print segmented_data[0]
 	raw_x, raw_y = split_x_y(segmented_data)
 	train_size = int(0.75 * len(raw_y))
 	train_x, test_x = raw_x[0:train_size], raw_x[train_size: len(raw_y)]

@@ -16,7 +16,7 @@ import numpy as np
 
 scaler = StandardScaler() # Standardization for ML model
 clf_svm = svm.SVC()
-clf_knn = neighbors.KNeighborsClassifier(n_neighbors=8)
+clf_knn = neighbors.KNeighborsClassifier(n_neighbors=4)
 imputer = Imputer()
 
 # def predict(raw_data):
@@ -54,7 +54,7 @@ def cross_validate(outputFile, data_x, data_y, n_splits=2):
 		clf_svm = svm.SVC()
 		clf_svm.fit(X_train, y_train)
 		svm_avg += clf_svm.score(X_test, y_test)
-		clf_knn = neighbors.KNeighborsClassifier(n_neighbors=20)
+		clf_knn = neighbors.KNeighborsClassifier(n_neighbors=4)
 		clf_knn.fit(X_train, y_train)
 		knn_avg += clf_knn.score(X_test, y_test)
 	outputFile.write("Avg SVM score:" + str(svm_avg/n_splits) + "\n")
@@ -105,7 +105,7 @@ def train_svm_model(input_segment_list, output_dance_moves, outputFile):
 	clf_svm.fit(scaler.transform(X), y)
 	clf_knn.fit(scaler.transform(X), y)
 
-train_input, train_output, test_input, test_output = dataset.getData(filename='data.csv')
+train_input, train_output, test_input, test_output = dataset.getData(foldername='../data')
 outputFile = open('outputs.txt', 'w')
 train_svm_model(train_input, train_output, outputFile)
 evaluate_svm_classifier(test_input, test_output, outputFile)
