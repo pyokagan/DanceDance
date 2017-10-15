@@ -11,7 +11,7 @@ taskComm_setup()
 {
     uart1_init();
     ucomm_init(uart1_write, NULL, uart1_read);
-    taskComm_queue = xQueueCreate(100, sizeof(taskComm_Command));
+    taskComm_queue = xQueueCreate(10, sizeof(taskComm_Command));
     SampleBuffer_init(&sampleBuffer);
 }
 
