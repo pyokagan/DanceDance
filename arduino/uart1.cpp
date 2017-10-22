@@ -41,23 +41,20 @@ ISR(USART1_UDRE_vect)
     UART1._tx_udr_empty_irq();
 }
 
-void
-uart1_init(void)
+void uart1_init(void)
 {
     lock_read = xSemaphoreCreateBinary();
     UART1.begin(115200);
 }
 
-void
-uart1_write(uint8_t byte)
+void uart1_write(uint8_t byte)
 {
     taskENTER_CRITICAL();
     UART1.write(byte);
     taskEXIT_CRITICAL();
 }
 
-uint8_t
-uart1_read(void)
+uint8_t uart1_read(void)
 {
     while (UART1.available() <= 0) {
         while (xSemaphoreTake(lock_read, portMAX_DELAY) != pdTRUE);

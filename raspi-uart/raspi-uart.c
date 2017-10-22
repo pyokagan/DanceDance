@@ -102,10 +102,10 @@ reset:
             StrBuf_addf(&sb, "# timeslice=%u, slack=%u, packetLoss=%d%s\n",
                 numSamples, slack, packetLoss,
                 streamMode ? " STREAM" : "");
-            StrBuf_addf(&sb, "# acc1x, acc1y, acc1z, "
-                "gyro1x, gyro1y, gyro1z, "
-                "acc2x, acc2y, acc2z, "
-                "gyro2x, gyro2y, gyro2z\n");
+            StrBuf_addf(&sb, "#acc1x,acc1y,acc1z,"
+                "gyro1x,gyro1y,gyro1z,"
+                "acc2x,acc2y,acc2z,"
+                "gyro2x,gyro2y,gyro2z\n");
         }
 
         if (streamMode && disconnect)
