@@ -64,10 +64,10 @@ taskI2C(void *pvParameters)
 	cmd.sendSample.sample.gyro2.z = 0;
 
 	for (;;) {
-		/*mpu1Active = mpu1.testConnection();
+		mpu1Active = mpu1.testConnection();
 		mpu2Active = mpu2.testConnection();
 		if (mpu1Active && mpu2Active) {
-	 		mpu1.getMotion6(&cmd.sendSample.sample.acc1.x,
+			mpu1.getMotion6(&cmd.sendSample.sample.acc1.x,
 					&cmd.sendSample.sample.acc1.y,
 					&cmd.sendSample.sample.acc1.z,
 					&cmd.sendSample.sample.gyro1.x,
@@ -81,26 +81,27 @@ taskI2C(void *pvParameters)
 					&cmd.sendSample.sample.gyro2.y,
 					&cmd.sendSample.sample.gyro2.z);
 
-			if (cmd.sendSample.sample.acc1.x == 0 || cmd.sendSample.sample.gyro1.x == 0) {
-				mpu1.initialize();
-			} else if (cmd.sendSample.sample.acc2.x == 0 || cmd.sendSample.sample.gyro2.x == 0) {
-				mpu2.initialize();	
+			if (cmd.sendSample.sample.acc1.x == 0 || cmd.sendSample.sample.gyro1.x == 0 || cmd.sendSample.sample.acc2.x == 0 || cmd.sendSample.sample.gyro2.x == 0) {
+				if (cmd.sendSample.sample.acc1.x == 0 || cmd.sendSample.sample.gyro1.x == 0) {
+					mpu1.initialize();
+				} 
+				if (cmd.sendSample.sample.acc2.x == 0 || cmd.sendSample.sample.gyro2.x == 0) {
+					mpu2.initialize();	
+				}
 			} else {
 				while (!xQueueSendToBack(taskComm_queue, &cmd, portMAX_DELAY));
 			}
 		}
 		else {
-			while (!mpu1Active) {
+			if (!mpu1Active) {
 				mpu1.initialize();
-				mpu1Active = mpu1.testConnection();
 			}	
-			while (!mpu2Active) {
+			if (!mpu2Active) {
 				mpu2.initialize();
-				mpu2Active = mpu2.testConnection();
 			}	
-		}*/
+		}
 
-		mpu1.getMotion6(&cmd.sendSample.sample.acc1.x,
+		/*mpu1.getMotion6(&cmd.sendSample.sample.acc1.x,
 		  &cmd.sendSample.sample.acc1.y,
 		  &cmd.sendSample.sample.acc1.z,
 		  &cmd.sendSample.sample.gyro1.x,
@@ -114,7 +115,7 @@ taskI2C(void *pvParameters)
 		  &cmd.sendSample.sample.gyro2.y,
 		  &cmd.sendSample.sample.gyro2.z);
 
-		  while (!xQueueSendToBack(taskComm_queue, &cmd, portMAX_DELAY));
+		  while (!xQueueSendToBack(taskComm_queue, &cmd, portMAX_DELAY));*/
 
 		while (xSemaphoreTake(timerLock, portMAX_DELAY) != pdTRUE);
 	}
