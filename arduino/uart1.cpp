@@ -9,6 +9,7 @@
 #include <HardwareSerial_private.h>
 #include <wiring_private.h>
 
+// static HardwareSerial UART1(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UCSR0C, &UDR0);
 static HardwareSerial UART1(&UBRR1H, &UBRR1L, &UCSR1A, &UCSR1B, &UCSR1C, &UDR1);
 static SemaphoreHandle_t lock_read;
 
