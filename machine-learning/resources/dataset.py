@@ -19,7 +19,7 @@ def split_x_y(segments):
 	return segment_x, segment_y
 
 def readCsvFile(filename):
-	activity_name = (filename.split('/')[-1]).split('.')[0]
+	activity_name = (filename.split('/')[-1]).split('.')[0].split('-')[0]
 	activity_id = getActivityId(activity_name)
 	print activity_name + ' %%'
 	if activity_id < 0:
@@ -27,9 +27,9 @@ def readCsvFile(filename):
 	with open(filename, 'rb') as csvfile:
 		reader = csv.DictReader(csvfile)
 		for row in reader:
-			first_field = row['acc1x'];
+			first_field = row['# acc1x'];
 			if not first_field.startswith('#') and activity_id > 0:
-				raw_data.append([float(row['acc2x']), float(row['acc2y']), float(row['acc2z']), float(row['gyro2x']), float(row['gyro2y']), float(row['gyro2z']), activity_id])
+				raw_data.append([float(first_field), float(row[' acc1y']), float(row[' acc1z']), float(row[' gyro1x']), float(row[' gyro1y']), float(row[' gyro1z']),float(row[' acc2x']), float(row[' acc2y']), float(row[' acc2z']), float(row[' gyro2x']), float(row[' gyro2y']), float(row[' gyro2z']), activity_id])
 	csvfile.close()
 	print len(raw_data)
 
