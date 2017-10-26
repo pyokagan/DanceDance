@@ -29,7 +29,8 @@ def get_final_prediction(predictions):
 def predict_user_input():
 	segment = []
 	predictions = []
-	for line in sys.stdin:
+	while True:
+		line = sys.stdin.readline().rstrip('\n')
 		sample = []
 		if line.startswith('#'):
 			predictions.append(predict(segment))
