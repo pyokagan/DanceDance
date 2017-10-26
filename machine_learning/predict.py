@@ -19,18 +19,18 @@ def predict(raw_data):
 	features = scaler.transform(features.reshape(1,-1))
 	output_svm = clf_svm.predict_proba(features)
 	output_knn = clf_knn.predict_proba(features)
-	if max(output_svm[0]) > 0.6:
-		print("From SVM: " + str(output_svm))
-		print("From KNN:" + str(output_knn))
+	print("From SVM: " + str(output_svm))
+	print("From KNN:" + str(output_knn))
+	if max(output_svm[0]) > 0.55:
 		index = np.where(output_svm[0] == max(output_svm[0]))[0]
-		return index + 1
+		return index
 	return -1
 
 def get_final_prediction(predictions):
 	print(predictions)
 	if predictions[-1] != -1 and predictions[-1] == predictions[-2] == predictions[-3] == predictions[-4]:
 		activityId = predictions[-1]
-		print(activityId[0])
+		# print(activityId[0])
 		return activity.getActivityName(activityId[0])
 	return -1
 
@@ -39,7 +39,6 @@ def predict_segment(lines):
 	predictions = []
 	for line in lines:
 		line = line.rstrip('\n')
-		#print (line)
 		sample = []
 		if line.startswith('#'):
 			if len(segment) == 0:
@@ -53,7 +52,6 @@ def predict_segment(lines):
 		if len(predictions) > 3:
 			result = get_final_prediction(predictions)
 			if result >= 0:
-				print("result: " + result)
 				return result
 			else:
 				return 'confused'
