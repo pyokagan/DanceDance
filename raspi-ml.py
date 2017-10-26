@@ -71,9 +71,12 @@ def main(args, prog=None):
     while True:
         result = predict.predict_segment(args.input) 
         if result == 'neutral':
-            continue
-        time.sleep(1)
-        print(result, file=args.output)
+		time.sleep(1000)
+		args.input.flush()
+            	continue
+        print(result)
+	time.sleep(2000)
+	args.input.flush()
         args.output.flush()
 
 
