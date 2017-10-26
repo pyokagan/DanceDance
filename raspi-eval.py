@@ -157,6 +157,14 @@ class PowThread(threading.Thread):
         # Is = (Vout * 1k) / (RS * RL)
         return sensor_value / (10 * RS)
 
+
+    def to_voltage(self, sensor_value):
+        "Convert the raw potential sensor value to voltage (in V)"
+
+        VOLTAGE_REF = 5.0
+        return 2 * (sensor_value * VOLTAGE_REF) / 1023
+
+
     def run(self):
         try:
             while True:
@@ -170,11 +178,11 @@ class PowThread(threading.Thread):
         with open(self.filepath, 'r') as f:
             print('opened', self.filepath, file=sys.stderr)
             for line in f:
-                voltage, raw_current = [x.strip() for x in line.split(',')]
-                voltage = int(voltage)
+                raw_voltage, raw_current = [x.strip() for x in line.split(',')]
+                raw_voltage = int(raw_voltage)
                 raw_current = int(raw_current)
                 with self.pow_state.lock:
-                    self.pow_state.voltage = voltage
+                    self.pow_state.voltage = self.to_voltage(voltage)
                     self.pow_state.current = self.to_current(raw_current)
 
 
