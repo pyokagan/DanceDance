@@ -1,14 +1,14 @@
 import sys
 from sklearn import svm, neighbors
-# from sklearn.externals import joblib
+from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 from machine_learning.utils import activity, features
 import numpy as np
 
 import pickle
-clf_svm = pickle.load(open("model_svm.sav", 'rb'))
-clf_knn = pickle.load(open("model_knn.sav", 'rb'))
-scaler = pickle.load(open("scaler.save", 'rb'))
+clf_svm = joblib.load("machine_learning/model_svm.sav")
+clf_knn = joblib.load("machine_learning/model_knn.sav")
+scaler = joblib.load("machine_learning/scaler.save")
 
 def extract_segment_features(segment):
 	values_transpose = segment.transpose()
