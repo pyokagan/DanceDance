@@ -20,6 +20,45 @@ import traceback
 last_content = None
 
 
+def read_target(target_path):
+    header = []
+    requires = set()
+    with open(target_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith('Requires='):
+                line = line[len('Requires='):]
+                requires.add(line)
+            else:
+                header.append(line)
+    return header, requires
+
+
+def write_target(target_path, header, requires):
+    with open(target_path, 'w') as f:
+        for line in header:
+            f.write(line + '\n')
+        f.write('\n')
+        for line in requires:
+            f.write('Requires=' + line + '\n')
+
+
+def merge_target(target_path, requires_add):
+    try:
+        header, requires = read_target(target_path)
+    except FileNotFoundError:
+        header = [
+            '[Unit]',
+            'Description=Default target',
+            'AllowIsolate=true'
+        ]
+        requires = set()
+    requires.update(requires_add)
+    write_target(target_path, header, requires)
+
+
 def publish():
     global last_content
     content = subprocess.check_output(['ip', 'addr'], universal_newlines=True)
@@ -56,12 +95,12 @@ def install():
         f.write('ExecStart={} -d\n'.format(os.path.abspath(__file__)))
         f.write('KillMode=mixed\n')
         f.write('Restart=always\n')
-    with open(target_path, 'w') as f:
-        f.write('[Unit]\n')
-        f.write('Description=Default target\n')
-        f.write('AllowIsolate=true\n')
-        f.write('Requires=publiship.service\n')
+    merge_target(target_path, [
+        'publiship.service',
+    ])
     print('systemd files installed.')
+    subprocess.check_call(['systemctl', '--user', 'daemon-reload'])
+    subprocess.check_call(['systemctl', '--user', 'restart', 'publiship'])
     print('Make sure to run:')
     print('')
     print('  loginctl enable-linger <username>')
