@@ -91,13 +91,13 @@ evaluate_knn_classifier(test_input, test_output, outputFile)
 outputFile.close()
 
 import pickle
-from sklearn.externals import joblib
+# from sklearn.externals import joblib
 # saving models 
 svm_file = "model_svm.sav"
-joblib.dump(clf_svm, svm_file)
+pickle.dump(clf_svm, open(svm_file,'wb'))
 
 knn_file = "model_knn.sav"
-joblib.dump(clf_knn, knn_file)
+pickle.dump(clf_knn, open(knn_file,'wb'))
 
 scaler_file = "scaler.save"
-joblib.dump(scaler, scaler_file)
+pickle.dump(scaler, open(scaler_file,'wb'))
