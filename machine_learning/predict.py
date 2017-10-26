@@ -2,7 +2,7 @@ import sys
 from sklearn import svm, neighbors
 # from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
-from utils import activity, features
+from machine_learning.utils import activity, features
 import numpy as np
 
 import pickle
