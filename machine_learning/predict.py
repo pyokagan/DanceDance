@@ -1,5 +1,4 @@
 import sys
-from collections import Counter
 from sklearn import svm, neighbors
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
@@ -24,26 +23,28 @@ def predict(raw_data):
 	return raw_output[0]
 
 def get_final_prediction(predictions):
-	print predictions	
-	count = Counter(predictions)
-	activityId = count.most_common(1)[0][0]
-	print activityId
-	return activity.getActivityName(activityId)
+	print predictions
+	if predictions[-1] == predictions[-2] == predictions[-3] == predictions[-4]:
+		activityId = predictions[-1]
+		print activityId
+		return activity.getActivityName(activityId)
+	return -1
 
-def predict_segment(fileName):
+def predict_segment(lines):
 	segment = []
 	predictions = []
-	lines = open(fileName).readlines()
 	for line in lines:
 		line = line.rstrip('\n')
 		sample = []
 		if line.startswith('#'):
 			segment_input = np.array(segment)
 			predictions.append(predict(segment_input))
-			if len(predictions) > 8:
-				result = get_final_prediction(predictions)
-				print "result: ", result
-				return result
 		else:
 			sample = [float(x.strip()) for x in line.split(',')]
 			segment.append(sample)
+
+		if len(predictions) > 4:
+			result = get_final_prediction(predictions)
+			if result >= 0:
+				print "result: ", result
+				return result
