@@ -14,7 +14,7 @@ taskPow(void *pvParameters)
         // Read the raw value from the INA169 board.
         // Current (in Amperes) will be calculated on the raspberry pi
         cmd.sendPow.pow.current = analogRead(A0);
-		//cmd.sendPow.pow.voltage = analogRead(A1);
+		cmd.sendPow.pow.voltage = analogRead(A1);
 
         while (!xQueueSendToBack(taskComm_queue, &cmd, portMAX_DELAY));
 
