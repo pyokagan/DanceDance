@@ -29,7 +29,7 @@ def readCsvFile(filename):
 		reader = csv.DictReader(csvfile)
 		for row in reader:
 			first_field = row['# acc1x'];
-			if not first_field.startswith('#') and activity_id > 0:
+			if not first_field.startswith('#') and activity_id >= 0:
 				raw_data.append([float(first_field), float(row[' acc1y']), float(row[' acc1z']), float(row[' gyro1x']), float(row[' gyro1y']), float(row[' gyro1z']),float(row[' acc2x']), float(row[' acc2y']), float(row[' acc2z']), float(row[' gyro2x']), float(row[' gyro2y']), float(row[' gyro2z']), activity_id])
 	csvfile.close()
 	print(len(raw_data))

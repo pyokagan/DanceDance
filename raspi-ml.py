@@ -70,14 +70,21 @@ def main(args, prog=None):
     args = p.parse_args(args)
     while True:
         result = predict.predict_segment(args.input) 
-        if result == 'neutral':
-		time.sleep(1000)
-		args.input.flush()
+        if result == 'neutral' or result == 'confused':
+		print (result)
             	continue
-        print(result)
-	time.sleep(2000)
-	args.input.flush()
-        args.output.flush()
+        print >> args.output, result
+	time.sleep(1)
+	print (result)
+	args.output.flush()
+	start = time.time()
+	elapsed = 0
+	for line in args.input:
+		elapsed = time.time() - start
+		if elapsed > 2:
+			print ('elapsed: ' +str(elapsed))
+			break
+        #args.output.flush()
 
 
 if __name__ == '__main__':

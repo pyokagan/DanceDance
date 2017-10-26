@@ -182,7 +182,7 @@ class PowThread(threading.Thread):
                 raw_voltage = int(raw_voltage)
                 raw_current = int(raw_current)
                 with self.pow_state.lock:
-                    self.pow_state.voltage = self.to_voltage(voltage)
+                    self.pow_state.voltage = self.to_voltage(raw_voltage)
                     self.pow_state.current = self.to_current(raw_current)
 
 
