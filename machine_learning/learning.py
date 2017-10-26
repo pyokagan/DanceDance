@@ -16,7 +16,7 @@ import numpy as np
 
 scaler = StandardScaler() # Standardization for ML model
 clf_svm = svm.SVC(probability=True)
-clf_knn = neighbors.KNeighborsClassifier(n_neighbors=6)
+clf_knn = neighbors.KNeighborsClassifier(n_neighbors=8)
 imputer = Imputer()
 
 def cross_validate(outputFile, data_x, data_y, n_splits=4):
@@ -30,7 +30,7 @@ def cross_validate(outputFile, data_x, data_y, n_splits=4):
 		clf_svm = svm.SVC()
 		clf_svm.fit(X_train, y_train)
 		svm_avg += clf_svm.score(X_test, y_test)
-		clf_knn = neighbors.KNeighborsClassifier(n_neighbors=6)
+		clf_knn = neighbors.KNeighborsClassifier(n_neighbors=8)
 		clf_knn.fit(X_train, y_train)
 		knn_avg += clf_knn.score(X_test, y_test)
 	outputFile.write("Avg SVM score:" + str(svm_avg/n_splits) + "\n")
@@ -90,14 +90,14 @@ evaluate_svm_classifier(test_input, test_output, outputFile)
 evaluate_knn_classifier(test_input, test_output, outputFile)
 outputFile.close()
 
-import pickle
-# from sklearn.externals import joblib
+# import pickle
+from sklearn.externals import joblib
 # saving models 
-svm_file = "model_svm.sav"
-pickle.dump(clf_svm, open(svm_file,'wb'))
+svm_file = "model_svm.save"
+joblib.dump(clf_svm, svm_file)
 
-knn_file = "model_knn.sav"
-pickle.dump(clf_knn, open(knn_file,'wb'))
+knn_file = "model_knn.save"
+joblib.dump(clf_knn, knn_file)
 
 scaler_file = "scaler.save"
-pickle.dump(scaler, open(scaler_file,'wb'))
+joblib.dump(scaler, scaler_file)
