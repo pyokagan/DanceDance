@@ -4,7 +4,7 @@ import sys
 import argparse
 import collections
 import time
-
+from machine_learning import predict 
 
 Sample = collections.namedtuple('Sample', [
     'acc1x',
@@ -70,6 +70,7 @@ def main(args, prog=None):
     args = p.parse_args(args)
     for sample_window in read_sample_windows(args.input):
         # Do some processing
+        predict.predict_segment(sample_window)
         time.sleep(1)
         # Print the detected action to args.output.
         # Each action printed will be sent to the evaluation server.
