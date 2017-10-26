@@ -24,6 +24,7 @@ def readCsvFile(filename):
 	print activity_name + ' %%'
 	if activity_id < 0:
 		return
+	print filename
 	with open(filename, 'rb') as csvfile:
 		reader = csv.DictReader(csvfile)
 		for row in reader:
