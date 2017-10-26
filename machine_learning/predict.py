@@ -16,11 +16,13 @@ def extract_segment_features(segment):
 def predict(raw_data):
 	features = extract_segment_features(raw_data)
 	features = scaler.transform(features.reshape(1,-1))
-	raw_output = clf_svm.predict(features)
-	raw_output1 = clf_knn.predict(features)
-	print("From SVM: " + str(raw_output))
-	print("From KNN:" + str(raw_output1))
-	return raw_output[0]
+	output_svm = clf_svm.predict_proba(features)
+	output_knn = clf_knn.predict_proba(features)
+	if max(output_svm) > 0.6:
+		print("From SVM: " + str(output_svm))
+		print("From KNN:" + str(output_knn))
+		return output_svm.index(max(output_svm)) + 1
+	return -1
 
 def get_final_prediction(predictions):
 	print predictions
@@ -46,5 +48,5 @@ def predict_segment(lines):
 		if len(predictions) > 4:
 			result = get_final_prediction(predictions)
 			if result >= 0:
-				print "result: ", result
+				print("result: " + result)
 				return result

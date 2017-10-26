@@ -15,7 +15,7 @@ import numpy as np
 # 	   	 IMU1 = acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z
 
 scaler = StandardScaler() # Standardization for ML model
-clf_svm = svm.SVC()
+clf_svm = svm.SVC(probability=True)
 clf_knn = neighbors.KNeighborsClassifier(n_neighbors=6)
 imputer = Imputer()
 
