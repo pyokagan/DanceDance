@@ -3,7 +3,7 @@ from sklearn import svm, neighbors
 from sklearn.preprocessing import StandardScaler, Imputer
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score, confusion_matrix
-from resources import features, dataset
+from utils import features, dataset
 import numpy as np
 
 # Here we assume that the input data is a list of segments,

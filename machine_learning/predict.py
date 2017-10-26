@@ -2,7 +2,7 @@ import sys
 from sklearn import svm, neighbors
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
-from resources import activity, features
+from utils import activity, features
 import numpy as np
 
 clf_svm = joblib.load("model_svm.sav")
