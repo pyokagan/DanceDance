@@ -25,10 +25,10 @@ def predict(raw_data):
 	return -1
 
 def get_final_prediction(predictions):
-	print predictions
+	print(predictions)
 	if predictions[-1] == predictions[-2] == predictions[-3] == predictions[-4]:
 		activityId = predictions[-1]
-		print activityId
+		print(activityId)
 		return activity.getActivityName(activityId)
 	return -1
 

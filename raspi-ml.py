@@ -4,12 +4,7 @@ import sys
 import argparse
 import collections
 import time
-<<<<<<< HEAD
-from machine_learning import predict 
-=======
 from machine_learning import predict
-
->>>>>>> 0eaa21ce91622e01dabeb800fac8212793ad2b42
 
 Sample = collections.namedtuple('Sample', [
     'acc1x',
