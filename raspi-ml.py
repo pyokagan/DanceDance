@@ -4,7 +4,12 @@ import sys
 import argparse
 import collections
 import time
+<<<<<<< HEAD
 from machine_learning import predict 
+=======
+from machine_learning import predict
+
+>>>>>>> 0eaa21ce91622e01dabeb800fac8212793ad2b42
 
 Sample = collections.namedtuple('Sample', [
     'acc1x',
@@ -68,16 +73,12 @@ def main(args, prog=None):
                    default=sys.stdin,
                    help='input sample window stream (default: stdin)')
     args = p.parse_args(args)
-    for sample_window in read_sample_windows(args.input):
-        # Do some processing
-        predict.predict_segment(sample_window)
+    while True:
+        result = predict.predict_segment(args.input) 
+        if result == 'neutral':
+            continue
         time.sleep(1)
-        # Print the detected action to args.output.
-        # Each action printed will be sent to the evaluation server.
-        print('wavehands', file=args.output)
-        # IMPORTANT: Make sure the output is flushed after every action
-        # printed. Otherwise, the action may not be sent immediately due to
-        # buffering.
+        print(result, file=args.output)
         args.output.flush()
 
 
