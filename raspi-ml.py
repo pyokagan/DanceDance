@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 """Raspi machine learning process"""
 import sys
 import argparse
