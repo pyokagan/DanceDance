@@ -80,7 +80,7 @@ def install_raspi_pipes(systemd_path):
             'rm -rf .raspi-service && ',
             'mkdir -p .raspi-service && ',
             'mkfifo .raspi-service/powpipe && ',
-            'mkfifo .raspi-service/mkpipe && ',
+            'mkfifo .raspi-service/mlpipe && ',
             'mkfifo .raspi-service/actionpipe\'',
         ]) + '\n')
         f.write('StandardOutput=journal\n')
