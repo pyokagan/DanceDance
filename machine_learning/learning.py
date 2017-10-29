@@ -83,7 +83,7 @@ def train_svm_model(input_segment_list, output_dance_moves, outputFile):
 	clf_svm.fit(scaler.transform(X), y)
 	clf_knn.fit(scaler.transform(X), y)
 
-train_input, train_output, test_input, test_output = dataset.getData(foldername='../data2')
+train_input, train_output, test_input, test_output = dataset.getData(foldername='../data-week11')
 outputFile = open('outputs.txt', 'w')
 train_svm_model(train_input, train_output, outputFile)
 evaluate_svm_classifier(test_input, test_output, outputFile)
