@@ -6,8 +6,8 @@ from machine_learning.utils import activity, features
 import numpy as np
 
 import pickle
-clf_svm = joblib.load("machine_learning/model_svm.sav")
-clf_knn = joblib.load("machine_learning/model_knn.sav")
+clf_svm = joblib.load("machine_learning/model_svm.save")
+clf_knn = joblib.load("machine_learning/model_knn.save")
 scaler = joblib.load("machine_learning/scaler.save")
 
 def extract_segment_features(segment):
@@ -20,7 +20,7 @@ def predict(raw_data):
 	output_svm = clf_svm.predict_proba(features)
 	output_knn = clf_knn.predict_proba(features)
 	print("From SVM: " + str(output_svm))
-	print("From KNN:" + str(output_knn))
+	#print("From KNN:" + str(output_knn))
 	if max(output_svm[0]) > 0.55:
 		index = np.where(output_svm[0] == max(output_svm[0]))[0]
 		return index
@@ -28,9 +28,9 @@ def predict(raw_data):
 
 def get_final_prediction(predictions):
 	print(predictions)
-	if predictions[-1] != -1 and predictions[-1] == predictions[-2] == predictions[-3] == predictions[-4]:
+	if predictions[-1] != -1 and predictions[-1] == predictions[-2] == predictions[-3]:
 		activityId = predictions[-1]
-		# print(activityId[0])
+		#print(activityId[0])
 		return activity.getActivityName(activityId[0])
 	return -1
 
@@ -49,7 +49,7 @@ def predict_segment(lines):
 			sample = [float(x.strip()) for x in line.split(',')]
 			segment.append(sample)
 
-		if len(predictions) > 3:
+		if len(predictions) > 2:
 			result = get_final_prediction(predictions)
 			if result >= 0:
 				return result
