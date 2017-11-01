@@ -52,8 +52,6 @@ def predict_segment(lines):
 				continue
 			segment_input = np.array(segment)
 			predictions.append(predict(segment_input))
-                        sys.stdout.write('segment\n')
-                        sys.stdout.flush()
 		else:
 			sample = [float(x.strip()) for x in line.split(',')]
 			segment.append(sample)
