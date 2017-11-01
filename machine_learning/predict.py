@@ -20,7 +20,7 @@ def predict(raw_data):
 	features = extract_segment_features(raw_data)
 	features = scaler.transform(features.reshape(1,-1))
 	output_svm = clf_svm.predict_proba(features)
-	output_knn = clf_knn.predict_proba(features)
+	# output_knn = clf_knn.predict_proba(features)
 	#print("From SVM: " + str(output_svm))
 	#print("From KNN:" + str(output_knn))
 	if max(output_svm[0]) > 0.55:
