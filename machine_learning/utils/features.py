@@ -35,5 +35,6 @@ def getSampleFeatures(raw_segment_transposed, number_of_triaxes = 2):
 	features = []
 	for index in range(len(raw_segment_transposed)):
 		val_list = raw_segment_transposed[index]
-		features.extend([mean(val_list), std(val_list), mad(val_list), max(val_list), min(val_list), iqr(val_list)])
+		features.extend([mean(val_list), std(val_list), max(val_list), min(val_list)])
+		# features.extend([mean(val_list), std(val_list), mad(val_list), max(val_list), min(val_list), iqr(val_list)])
 	return np.array(features)
