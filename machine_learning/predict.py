@@ -9,11 +9,7 @@ import pickle
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 clf_svm = joblib.load(os.path.join(root_dir, 'model_svm.save'))
-<<<<<<< HEAD
 #clf_knn = joblib.load(os.path.join(root_dir, 'model_knn.save'))
-=======
-# clf_knn = joblib.load(os.path.join(root_dir, 'model_knn.save'))
->>>>>>> 985bf168452fd8515669d371992298c6db1af58b
 scaler = joblib.load(os.path.join(root_dir, 'scaler.save'))
 
 def extract_segment_features(segment):

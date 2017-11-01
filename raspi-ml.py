@@ -79,16 +79,15 @@ def main(args, prog=None):
                     #print (result)
                     continue
             print >> args.output, result
-            time.sleep(1)
+            args.output.flush()
             f.write(str(result) + '\n')
             #print(result)
-            args.output.flush()
             start = time.time()
             elapsed = 0
             while True:
-                line = lines.readline()
+                line = args.input.readline()
                 elapsed = time.time() - start
-                if elapsed > 2:
+                if elapsed > 1.5:
                         break
 
 
