@@ -1,6 +1,7 @@
 #!/usr/bin/python
 """Raspi machine learning process"""
 import sys
+import os.path
 import argparse
 import collections
 import time
@@ -61,30 +62,35 @@ def parse_sample(line):
 
 def main(args, prog=None):
     p = argparse.ArgumentParser(prog=prog)
-    p.add_argument('-o', metavar='OUTPUT', dest='output',
+    p.add_argument('-o', metavar='OUTPUT', nargs='?', dest='output',
                    type=argparse.FileType('a'), default=sys.stdout,
                    help='output result stream (default: stdout)')
     p.add_argument('input', nargs='?', type=argparse.FileType('r'),
                    default=sys.stdin,
                    help='input sample window stream (default: stdin)')
     args = p.parse_args(args)
-    while True:
-        result = predict.predict_segment(args.input) 
-        if result == 'neutral' or result == 'confused':
-		print (result)
-            	continue
-        print >> args.output, result
-	time.sleep(1)
-	print (result)
-	args.output.flush()
-	start = time.time()
-	elapsed = 0
-	for line in args.input:
-		elapsed = time.time() - start
-		if elapsed > 2:
-			print ('elapsed: ' +str(elapsed))
-			break
-        #args.output.flush()
+   
+    root_dir =  os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(root_dir, 'log'), 'w') as f:
+        while True:
+            result = predict.predict_segment(args.input) 
+            if result == 'neutral' or result == 'confused':
+                    f.write(str(result) + '\n')
+                    #print (result)
+                    continue
+            print >> args.output, result
+            time.sleep(1)
+            f.write(str(result) + '\n')
+            #print(result)
+            args.output.flush()
+            start = time.time()
+            elapsed = 0
+            for line in args.input:
+                    elapsed = time.time() - start
+                    if elapsed > 2:
+                            #print ('elapsed: ' +str(elapsed))
+                            break
+            #args.output.flush()
 
 
 if __name__ == '__main__':

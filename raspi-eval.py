@@ -147,7 +147,7 @@ class PowThread(threading.Thread):
         "Converts the raw sensor value to current (in A)"
 
         VOLTAGE_REF = 5
-        RS = 10  # Shunt resistor value (in ohms)
+        RS = 0.1  # Shunt resistor value (in ohms)
 
         # Remap the ADC value into a voltage number
         sensor_value = (sensor_value * VOLTAGE_REF) / 1023
@@ -162,7 +162,7 @@ class PowThread(threading.Thread):
         "Convert the raw potential sensor value to voltage (in V)"
 
         VOLTAGE_REF = 5.0
-        return 2 * (sensor_value * VOLTAGE_REF) / 1023
+        return min(2 * (sensor_value * VOLTAGE_REF) / 1023, VOLTAGE_REF)
 
 
     def run(self):

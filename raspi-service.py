@@ -96,9 +96,9 @@ def install_raspi_uart(systemd_path, segment_size):
         f.write('[Service]\n')
         f.write('ExecStart=' + ' '.join([
             os.path.join(root_dir, 'raspi-uart', 'raspi-uart'),
-            '-t{}'.format(segment_size),
-            '-p.raspi-service/powpipe',
-            '-m.raspi-service/mlpipe',
+            '-t {}'.format(segment_size),
+            '-p', os.path.join(root_dir, 'powpipe'),
+            '-m', os.path.join(root_dir, 'mlpipe'),
         ]) + '\n')
         f.write('KillMode=mixed\n')
         f.write('Restart=always\n')
@@ -115,8 +115,8 @@ def install_raspi_ml(systemd_path):
         f.write('[Service]\n')
         f.write('ExecStart=' + ' '.join([
             os.path.join(root_dir, 'raspi-ml.py'),
-            '-o.raspi-service/actionpipe',
-            '.raspi-service/mlpipe',
+            '-o', os.path.join(root_dir, 'actionpipe'),
+            os.path.join(root_dir, 'mlpipe'),
         ]) + '\n')
         f.write('KillMode=mixed\n')
         f.write('Restart=always\n')
@@ -135,8 +135,8 @@ def install_raspi_wifi(systemd_path, server, port, secret):
             os.path.join(root_dir, 'raspi-eval.py'),
             '--secret',
             str(secret),
-            '.raspi-service/actionpipe',
-            '.raspi-service/powpipe',
+            os.path.join(root_dir, 'actionpipe'),
+            os.path.join(root_dir, 'powpipe'),
             str(server),
             str(port),
         ]) + '\n')
@@ -153,7 +153,7 @@ def main(args, prog=None):
     p_install = p_sub.add_parser('install')
     p_install.add_argument('-t', dest='segment_size', help='Segment size',
                            type=int, default=63)
-    p_install.add_argument('--server', default='127.0.0.1')
+    p_install.add_argument('--server', default='192.168.43.57')
     p_install.add_argument('--port', default='8000')
     p_install.add_argument('--secret', default='hihihihihihihihi')
 
