@@ -85,12 +85,11 @@ def main(args, prog=None):
             args.output.flush()
             start = time.time()
             elapsed = 0
-            for line in args.input:
-                    elapsed = time.time() - start
-                    if elapsed > 2:
-                            #print ('elapsed: ' +str(elapsed))
-                            break
-            #args.output.flush()
+            while True:
+                line = lines.readline()
+                elapsed = time.time() - start
+                if elapsed > 2:
+                        break
 
 
 if __name__ == '__main__':
