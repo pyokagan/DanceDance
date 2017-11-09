@@ -9,7 +9,7 @@ import pickle
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 clf_svm = joblib.load(os.path.join(root_dir, 'model_svm.save'))
-# clf_knn = joblib.load(os.path.join(root_dir, 'model_knn.save'))
+#clf_knn = joblib.load(os.path.join(root_dir, 'model_knn.save'))
 scaler = joblib.load(os.path.join(root_dir, 'scaler.save'))
 
 def extract_segment_features(segment):
@@ -20,7 +20,7 @@ def predict(raw_data):
 	features = extract_segment_features(raw_data)
 	features = scaler.transform(features.reshape(1,-1))
 	output_svm = clf_svm.predict_proba(features)
-	# output_knn = clf_knn.predict_proba(features)
+	#output_knn = clf_knn.predict_proba(features)
 	#print("From SVM: " + str(output_svm))
 	#print("From KNN:" + str(output_knn))
 	if max(output_svm[0]) > 0.55:
@@ -39,7 +39,8 @@ def get_final_prediction(predictions):
 def predict_segment(lines):
 	segment = []
 	predictions = []
-	for line in lines:
+        while True:
+		line = lines.readline()
 		line = line.rstrip('\n')
 		sample = []
 		if line.startswith('#'):
