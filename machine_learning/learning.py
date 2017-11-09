@@ -5,6 +5,7 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score, confusion_matrix
 from utils import features, dataset
 import numpy as np
+import os.path
 
 # Here we assume that the input data is a list of segments,
 # 	i.e; input = [segment0, segment1, segment2, ...]
@@ -83,7 +84,11 @@ def train_svm_model(input_segment_list, output_dance_moves, outputFile):
 	clf_svm.fit(scaler.transform(X), y)
 	clf_knn.fit(scaler.transform(X), y)
 
-train_input, train_output, test_input, test_output = dataset.getData(foldername='../data2')
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+foldername = os.path.join(root_dir, 'data-week11')
+
+train_input, train_output, test_input, test_output = dataset.getData(foldername=foldername)
 outputFile = open('outputs.txt', 'w')
 train_svm_model(train_input, train_output, outputFile)
 evaluate_svm_classifier(test_input, test_output, outputFile)
