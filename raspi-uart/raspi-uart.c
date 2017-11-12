@@ -320,7 +320,10 @@ main(int argc, char *argv[])
         if (!ucomm_read(&msg)) {
             if (errno == EINTR || errno == EAGAIN)
                 continue;
-            else
+            else if (errno == ETIMEDOUT) {
+                info("warning: not receiving data");
+                continue;
+            } else
                 die("ucomm_read failed: %s", strerror(errno));
         }
 

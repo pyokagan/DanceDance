@@ -67,8 +67,8 @@ userial_initRaspi(void)
     options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
     options.c_oflag &= ~OPOST;
 
-    options.c_cc[VMIN] = 1;
-    options.c_cc[VTIME] = 0;
+    options.c_cc[VMIN] = 0;
+    options.c_cc[VTIME] = 10; // 1s
 
     if (tcsetattr(fd, TCSANOW, &options) < 0)
         die("tcsetattr failed: %s", strerror(errno));
@@ -107,6 +107,8 @@ userialRead(uint8_t *c)
 {
     if (userial_in.i == userial_in.len) {
         ssize_t nbytes = read(fd, userial_in.buf, sizeof(userial_in.buf));
+        if (!nbytes)
+            errno = ETIMEDOUT;
         if (nbytes <= 0)
             return false;
         userial_in.i = 0;
