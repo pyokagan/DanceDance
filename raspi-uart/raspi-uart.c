@@ -317,7 +317,13 @@ main(int argc, char *argv[])
     while (!done) {
         ucomm_Message msg;
 
-        ucomm_read(&msg);
+        if (!ucomm_read(&msg)) {
+            if (errno == EINTR || errno == EAGAIN)
+                continue;
+            else
+                die("ucomm_read failed: %s", strerror(errno));
+        }
+
         if (packetLoss != 0 && rand() % 100 < packetLoss)
             continue; // simulate packet loss
 

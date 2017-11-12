@@ -1,6 +1,7 @@
 #ifndef _ARDUINO_UART1_H
 #define _ARDUINO_UART1_H
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +22,7 @@ void uart1_write(uint8_t byte);
  * Reads a byte from the UART.
  * Blocks if there are no characters in the receive buffer.
  */
-uint8_t uart1_read(void);
+bool uart1_read(uint8_t *);
 
 #ifdef __cplusplus
 }

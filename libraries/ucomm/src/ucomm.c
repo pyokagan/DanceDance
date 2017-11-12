@@ -16,10 +16,10 @@ ucomm_initRaspi(void)
 #endif
 }
 
-void
+bool
 ucomm_read(ucomm_Message *msg)
 {
-    uframe_read(msg, sizeof(ucomm_Message));
+    return uframe_read(msg, sizeof(ucomm_Message), NULL);
 }
 
 void

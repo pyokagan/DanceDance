@@ -14,9 +14,14 @@
 
 static void userialWrite(uint8_t);
 static void userialFlush(void);
-static uint8_t userialRead(void);
+static bool userialRead(uint8_t *);
 
-static FILE *userial_in;
+static int fd;
+static struct {
+    uint8_t buf[16];
+    uint8_t len;
+    uint8_t i;
+} userial_in;
 static FILE *userial_out;
 
 __attribute__((noreturn))
@@ -38,7 +43,7 @@ void
 userial_initRaspi(void)
 {
     struct termios options;
-    int fd, status;
+    int status;
 
     fd = open("/dev/serial0", O_RDWR | O_NOCTTY);
     if (fd < 0)
@@ -80,9 +85,6 @@ userial_initRaspi(void)
     userial_out = fdopen(fd, "w");
     setvbuf(userial_out, NULL, _IOFBF, 16);
 
-    userial_in = fdopen(fd, "r");
-    setvbuf(userial_in, NULL, _IOFBF, 16);
-
     userial_write = userialWrite;
     userial_flush = userialFlush;
     userial_read = userialRead;
@@ -100,10 +102,18 @@ userialFlush(void)
     fflush(userial_out);
 }
 
-static uint8_t
-userialRead(void)
+static bool
+userialRead(uint8_t *c)
 {
-    return getc(userial_in);
+    if (userial_in.i == userial_in.len) {
+        ssize_t nbytes = read(fd, userial_in.buf, sizeof(userial_in.buf));
+        if (nbytes <= 0)
+            return false;
+        userial_in.i = 0;
+        userial_in.len = nbytes;
+    }
+    *c = userial_in.buf[userial_in.i++];
+    return true;
 }
 
 #endif

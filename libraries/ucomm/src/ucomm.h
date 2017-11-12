@@ -114,7 +114,11 @@ void ucomm_init(userial_write_t, userial_flush_t, userial_read_t);
 
 void ucomm_initRaspi(void);
 
-void ucomm_read(ucomm_Message *);
+/**
+ * Returns true if a message was successfully read,
+ * false if an error occurred while reading.
+ */
+bool ucomm_read(ucomm_Message *);
 
 void ucomm_write(const ucomm_Message *);
 

@@ -56,8 +56,8 @@ uframe_write(const void *data, uint8_t len)
         userial_flush();
 }
 
-uint8_t
-uframe_read(void *data, uint8_t maxLen)
+bool
+uframe_read(void *data, uint8_t maxLen, uint8_t *nbytesRead)
 {
     enum {
         STATE_INIT,
@@ -77,12 +77,14 @@ uframe_read(void *data, uint8_t maxLen)
             state = STATE_START;
             break;
         case STATE_START: // looking for starting UFRAME_FLAG_BYTE
-            byte = userial_read();
+            if (!userial_read(&byte))
+                return false;
             if (byte == UFRAME_FLAG_BYTE)
                 state = STATE_BODY;
             break;
         case STATE_BODY:
-            byte = userial_read();
+            if (!userial_read(&byte))
+                return false;
             if (escape) {
                 if (bytesRead >= maxLen) {
                     state = STATE_INIT;
@@ -103,9 +105,11 @@ uframe_read(void *data, uint8_t maxLen)
                 for (uint8_t i = 0; i < bytesRead - 2; i++)
                     crc = uframe_crc16(crc, ptr[i]);
                 uint16_t expectedCrc = (ptr[bytesRead - 2] << 8) | ptr[bytesRead - 1];
-                if (crc == expectedCrc)
-                    return bytesRead - 2;
-                else
+                if (crc == expectedCrc) {
+                    if (nbytesRead)
+                        *nbytesRead = bytesRead - 2;
+                    return true;
+                } else
                     RESET();
             } else {
                 if (bytesRead >= maxLen) {

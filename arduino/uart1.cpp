@@ -54,7 +54,7 @@ void uart1_write(uint8_t byte)
     taskEXIT_CRITICAL();
 }
 
-uint8_t uart1_read(void)
+bool uart1_read(uint8_t *c)
 {
     while (UART1.available() <= 0) {
         while (xSemaphoreTake(lock_read, portMAX_DELAY) != pdTRUE);
