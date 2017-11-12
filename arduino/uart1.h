@@ -1,16 +1,10 @@
 #ifndef _ARDUINO_UART1_H
 #define _ARDUINO_UART1_H
 #include <stdint.h>
-#include <HardwareSerial.h>
-#include <Arduino_FreeRTOS.h>
-#include <semphr.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern SemaphoreHandle_t lock_read;
-extern HardwareSerial UART1;
 
 /**
  * Initializes the arduino's UART 1
