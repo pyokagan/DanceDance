@@ -117,9 +117,9 @@ taskI2C(void *pvParameters)
         } else {
             inactiveCounter++;
             if (inactiveCounter >= 44) {
-                taskENTER_CRITICAL();
                 Fastwire::reset();
-                delay(1000);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+                taskENTER_CRITICAL();
                 Fastwire::setup(100, true);
                 taskEXIT_CRITICAL();
                 inactiveCounter = 0;
