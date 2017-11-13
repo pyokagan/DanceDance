@@ -224,3 +224,84 @@ CHEAT_TEST(large_window,
 
     cheat_assert(sampleAssembler.ready);
 )
+
+// Test for mpu disconnect
+CHEAT_TEST(mpu_disconnect,
+    ucomm_SampleAssembler sampleAssembler;
+    ucomm_Message msg;
+
+    ucomm_SampleAssembler_init(&sampleAssembler, 1, 1);
+    sampleAssembler.ucomm_write = NULL;
+
+    cheat_assert_unsigned_int(sampleAssembler.numReady, 0);
+    cheat_assert_unsigned_int(sampleAssembler.start, 0);
+    cheat_assert_unsigned_int(sampleAssembler.end, 0);
+    cheat_assert(!sampleAssembler.mpu1Disconnected);
+    cheat_assert(!sampleAssembler.mpu2Disconnected);
+
+    msg.header.id = 1;
+    msg.header.type = UCOMM_MESSAGE_ACC1;
+    msg.acc.x = 0;
+    msg.acc.y = 0;
+    msg.acc.z = 0;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+
+    msg.header.type = UCOMM_MESSAGE_GYRO1;
+    msg.gyro.x = 0;
+    msg.gyro.y = 0;
+    msg.gyro.z = 0;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+
+    msg.header.type = UCOMM_MESSAGE_ACC2;
+    msg.acc.x = 1;
+    msg.acc.y = 2;
+    msg.acc.z = 3;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+
+    msg.header.type = UCOMM_MESSAGE_ACC1;
+    msg.header.id = 2;
+    msg.acc.x = 1;
+    msg.acc.y = 2;
+    msg.acc.z = 3;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+    cheat_assert_unsigned_int(sampleAssembler.start, 0);
+    cheat_assert_unsigned_int(sampleAssembler.end, 2);
+    cheat_assert_unsigned_int(sampleAssembler.numReady, 0);
+
+    msg.header.type = UCOMM_MESSAGE_GYRO1;
+    msg.gyro.x = 1;
+    msg.gyro.y = 2;
+    msg.gyro.z = 3;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+
+    msg.header.type = UCOMM_MESSAGE_ACC2;
+    msg.acc.x = 4;
+    msg.acc.y = 5;
+    msg.acc.z = 6;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+
+    msg.header.type = UCOMM_MESSAGE_GYRO2;
+    msg.gyro.x = 4;
+    msg.gyro.y = 5;
+    msg.gyro.z = 6;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+    cheat_assert_unsigned_int(sampleAssembler.numReady, 0);
+    cheat_assert(!sampleAssembler.mpu1Disconnected);
+    cheat_assert(!sampleAssembler.mpu2Disconnected);
+    cheat_assert(!sampleAssembler.ready);
+
+    msg.header.type = UCOMM_MESSAGE_GYRO2_RESEND;
+    msg.header.id = 1;
+    msg.gyro.x = 7;
+    msg.gyro.y = 8;
+    msg.gyro.z = 9;
+    ucomm_SampleAssembler_feed(&sampleAssembler, &msg);
+    cheat_assert_unsigned_int(sampleAssembler.numReady, 1);
+    cheat_assert_unsigned_int(sampleAssembler.start, 1);
+    cheat_assert_unsigned_int(sampleAssembler.end, 2);
+    cheat_assert(sampleAssembler.ready);
+    cheat_assert_unsigned_int(sampleAssembler.numSamplesDropped, 0);
+    cheat_assert(sampleAssembler.disconnect);
+    cheat_assert(!sampleAssembler.mpu1Disconnected);
+    cheat_assert(!sampleAssembler.mpu2Disconnected);
+)

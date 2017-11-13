@@ -49,6 +49,8 @@ ucomm_SampleAssembler_init(ucomm_SampleAssembler *self,
     self->ucomm_write = ucomm_write;
     self->numPacketsRecovered = 0;
     self->numSamplesDropped = 0;
+    self->mpu1Disconnected = false;
+    self->mpu2Disconnected = false;
 }
 
 void
@@ -89,6 +91,28 @@ isSampleType(ucomm_type_t type)
         type == UCOMM_MESSAGE_GYRO1 ||
         type == UCOMM_MESSAGE_GYRO2 ||
         isSampleResend(type);
+}
+
+static bool
+isMpu1Disconnected(const ucomm_Sample *sample)
+{
+    return sample->acc1.x == 0 &&
+        sample->acc1.y == 0 &&
+        sample->acc1.z == 0 &&
+        sample->gyro1.x == 0 &&
+        sample->gyro1.y == 0 &&
+        sample->gyro1.z == 0;
+}
+
+static bool
+isMpu2Disconnected(const ucomm_Sample *sample)
+{
+    return sample->acc2.x == 0 &&
+        sample->acc2.y == 0 &&
+        sample->acc2.z == 0 &&
+        sample->gyro2.x == 0 &&
+        sample->gyro2.y == 0 &&
+        sample->gyro2.z == 0;
 }
 
 static bool
@@ -315,8 +339,21 @@ ucomm_SampleAssembler_feed(ucomm_SampleAssembler *self, const ucomm_Message *msg
     }
 
     unsigned int offset = idx >= self->start ? idx - self->start : idx + (self->alloc - self->start);
-    if (prevState != STATE_READY && self->state[idx] == STATE_READY && offset < self->windowSize) {
-        self->numReady++;
+    if (prevState != STATE_READY && self->state[idx] == STATE_READY) {
+        if (offset < self->windowSize)
+            self->numReady++;
+
+        if (idx == getLastIdx(self)) {
+            self->mpu1Disconnected = isMpu1Disconnected(&self->sample[idx]);
+            self->mpu2Disconnected = isMpu2Disconnected(&self->sample[idx]);
+        }
+
+        if (isMpu1Disconnected(&self->sample[idx]) || isMpu2Disconnected(&self->sample[idx])) {
+            self->disconnect = true;
+            while (self->start != idx)
+                dropOne(self);
+            dropOne(self);
+        }
     }
 
     if (self->numReady >= self->windowSize)

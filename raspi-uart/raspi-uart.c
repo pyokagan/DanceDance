@@ -314,6 +314,8 @@ main(int argc, char *argv[])
     bool disconnect = false;
     bool powDisconnect = false;
     unsigned int prevSamplesDropped = sampleAssembler.numSamplesDropped;
+    bool mpu1Disconnected = false;
+    bool mpu2Disconnected = false;
     while (!done) {
         ucomm_Message msg;
 
@@ -335,6 +337,22 @@ main(int argc, char *argv[])
         if (!sampleAssemblerFed && !powReaderFed) {
             info("received unknown message with type %u", msg.header.type);
             continue;
+        }
+
+        if (sampleAssemblerFed && sampleAssembler.mpu1Disconnected != mpu1Disconnected) {
+            if (sampleAssembler.mpu1Disconnected)
+                info("mpu1 disconnected");
+            else
+                info("mpu1 connected");
+            mpu1Disconnected = sampleAssembler.mpu1Disconnected;
+        }
+
+        if (sampleAssemblerFed && sampleAssembler.mpu2Disconnected != mpu2Disconnected) {
+            if (sampleAssembler.mpu2Disconnected)
+                info("mpu2 disconnected");
+            else
+                info("mpu2 connected");
+            mpu2Disconnected = sampleAssembler.mpu2Disconnected;
         }
 
         if (sampleAssemblerFed && sampleAssembler.disconnect)

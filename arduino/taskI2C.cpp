@@ -47,6 +47,28 @@ isMpu2Zeroes(const ucomm_Sample *sample)
         (sample->gyro2.x == 0 && sample->gyro2.y == 0 && sample->gyro2.z == 0);
 }
 
+static void
+zeroMpu1(ucomm_Sample *sample)
+{
+    sample->acc1.x = 0;
+    sample->acc1.y = 0;
+    sample->acc1.z = 0;
+    sample->gyro1.x = 0;
+    sample->gyro1.y = 0;
+    sample->gyro1.z = 0;
+}
+
+static void
+zeroMpu2(ucomm_Sample *sample)
+{
+    sample->acc2.x = 0;
+    sample->acc2.y = 0;
+    sample->acc2.z = 0;
+    sample->gyro2.x = 0;
+    sample->gyro2.y = 0;
+    sample->gyro2.z = 0;
+}
+
 void
 taskI2C_setup()
 {
@@ -89,14 +111,17 @@ taskI2C(void *pvParameters)
         if (mpu2Active && isMpu2Zeroes(&cmd.sendSample.sample))
             mpu2Active = false;
 
-        if (!mpu1Active || !mpu2Active) {
-            if (!mpu1Active)
-                mpu1Active = setupMpu(&mpu1);
-            if (!mpu2Active)
-                mpu2Active = setupMpu(&mpu2);
-        } else {
-            while (xQueueSendToBack(taskComm_queue, &cmd, portMAX_DELAY) != pdTRUE);
+        if (!mpu1Active) {
+            zeroMpu1(&cmd.sendSample.sample);
+            mpu1Active = setupMpu(&mpu1);
         }
+
+        if (!mpu2Active) {
+            zeroMpu2(&cmd.sendSample.sample);
+            mpu2Active = setupMpu(&mpu2);
+        }
+
+        while (xQueueSendToBack(taskComm_queue, &cmd, portMAX_DELAY) != pdTRUE);
 
         /*mpu1.getMotion6(&cmd.sendSample.sample.acc1.x,
           &cmd.sendSample.sample.acc1.y,

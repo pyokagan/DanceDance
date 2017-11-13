@@ -24,6 +24,8 @@ typedef struct ucomm_SampleAssembler {
     bool firstPacket;
     bool disconnect;
     bool ready;
+    bool mpu1Disconnected;
+    bool mpu2Disconnected;
     void (*ucomm_write)(const ucomm_Message *);
 } ucomm_SampleAssembler;
 
