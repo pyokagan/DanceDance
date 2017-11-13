@@ -85,6 +85,7 @@ taskI2C_setup()
 void
 taskI2C(void *pvParameters)
 {
+    unsigned int inactiveCounter = 0;
     taskComm_Command cmd = {};
     cmd.type = TASKCOMM_COMMAND_SEND_SAMPLE;
 
@@ -110,6 +111,20 @@ taskI2C(void *pvParameters)
 
         if (mpu2Active && isMpu2Zeroes(&cmd.sendSample.sample))
             mpu2Active = false;
+
+        if (mpu1Active || mpu2Active) {
+            inactiveCounter = 0;
+        } else {
+            inactiveCounter++;
+            if (inactiveCounter >= 44) {
+                taskENTER_CRITICAL();
+                Fastwire::reset();
+                delay(1000);
+                Fastwire::setup(100, true);
+                taskEXIT_CRITICAL();
+                inactiveCounter = 0;
+            }
+        }
 
         if (!mpu1Active) {
             zeroMpu1(&cmd.sendSample.sample);
