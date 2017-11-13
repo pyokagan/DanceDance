@@ -1,6 +1,5 @@
 #include "taskI2C.h"
 #include "taskComm.h"
-#include <Wire.h>
 #include <I2Cdev.h>
 #include <MPU6050.h>
 #include <stdbool.h>
@@ -51,7 +50,7 @@ isMpu2Zeroes(const ucomm_Sample *sample)
 void
 taskI2C_setup()
 {
-    Wire.begin();
+    Fastwire::setup(100, true);
 
     mpu1Active = setupMpu(&mpu1);
     mpu2Active = setupMpu(&mpu2);
