@@ -1,6 +1,6 @@
 import random
 
-sampling_freq = 48
+sampling_freq = 42
 
 def get_window_size():
 	"""Returns the size for each segment for input stream.
