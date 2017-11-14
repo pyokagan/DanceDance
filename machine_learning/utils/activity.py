@@ -1,6 +1,9 @@
 activity = ['neutral', 'wavehands', 'busdriver', 'frontback', 'sidestep', 'jumping',
 		'jumpingjack', 'turnclap', 'squatturnclap', 'window', 'window360']
 
+activityNameList = ['neutral', 'wavehands', 'busdriver', 'frontback', 'sidestep', 'jumping',
+		'jumpingjack', 'turnclap', 'squatturnclap', 'windowcleaning', 'windowcleaner360']
+
 def getActivityId(activityName):
 	"""Given an activity name - associates it with an index (enumeration).
 
@@ -20,6 +23,6 @@ def getActivityName(activityId):
 	activityId -- id of the dance move
 	"""
 	if -1 < activityId < len(activity):
-		return activity[activityId]
+		return activityNameList[activityId]
 	else:
 		raise ValueError('Invalid Id generated')

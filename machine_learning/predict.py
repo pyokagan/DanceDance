@@ -23,7 +23,7 @@ def predict(raw_data):
 	#output_knn = clf_knn.predict_proba(features)
 	#print("From SVM: " + str(output_svm))
 	#print("From KNN:" + str(output_knn))
-	if max(output_svm[0]) > 0.55:
+	if max(output_svm[0]) > 0.5:
 		index = np.where(output_svm[0] == max(output_svm[0]))[0]
 		return index
 	return -1
