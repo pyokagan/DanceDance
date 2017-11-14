@@ -1,8 +1,8 @@
 activity = ['neutral', 'wavehands', 'busdriver', 'frontback', 'sidestep', 'jumping',
-		'jumpingjack', 'turnclap', 'squatturnclap', 'window', 'window360']
+		'jumpingjack', 'turnclap', 'squatturnclap', 'window', 'window360', 'logout']
 
 activityNameList = ['neutral', 'wavehands', 'busdriver', 'frontback', 'sidestep', 'jumping',
-		'jumpingjack', 'turnclap', 'squatturnclap', 'windowcleaning', 'windowcleaner360']
+		'jumpingjack', 'turnclap', 'squatturnclap', 'windowcleaning', 'windowcleaner360', 'logout']
 
 def getActivityId(activityName):
 	"""Given an activity name - associates it with an index (enumeration).
