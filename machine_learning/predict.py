@@ -6,6 +6,7 @@ from machine_learning.utils import activity, features
 import os.path
 import numpy as np
 import pickle
+import time
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 clf_svm = joblib.load(os.path.join(root_dir, 'model_svm.save'))
@@ -39,6 +40,7 @@ def get_final_prediction(predictions):
 def predict_segment(lines):
 	segment = []
 	predictions = []
+	startTime = time.time()
         while True:
 		line = lines.readline()
 		line = line.rstrip('\n')
@@ -55,6 +57,7 @@ def predict_segment(lines):
 		if len(predictions) > 2:
 			result = get_final_prediction(predictions)
 			if result >= 0:
+				print("Time to predict: " time.time()-startTime)
 				return result
 			else:
 				return 'confused'
