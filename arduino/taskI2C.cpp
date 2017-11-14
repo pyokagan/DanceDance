@@ -6,6 +6,9 @@
 #include <semphr.h>
 #include <TimerOne.h>
 
+#define MPU1_LED_PIN 10
+#define MPU2_LED_PIN 11
+
 static MPU6050 mpu1(0x68);
 static MPU6050 mpu2(0x69);
 
@@ -72,6 +75,8 @@ zeroMpu2(ucomm_Sample *sample)
 void
 taskI2C_setup()
 {
+    pinMode(MPU1_LED_PIN, OUTPUT);
+    pinMode(MPU2_LED_PIN, OUTPUT);
     Fastwire::setup(100, true);
 
     mpu1Active = setupMpu(&mpu1);
@@ -90,6 +95,9 @@ taskI2C(void *pvParameters)
     cmd.type = TASKCOMM_COMMAND_SEND_SAMPLE;
 
     for (;;) {
+        digitalWrite(MPU1_LED_PIN, 0);
+        digitalWrite(MPU2_LED_PIN, 0);
+
         if (mpu1Active && !mpu1.getMotion6(&cmd.sendSample.sample.acc1.x,
                     &cmd.sendSample.sample.acc1.y,
                     &cmd.sendSample.sample.acc1.z,
@@ -111,6 +119,9 @@ taskI2C(void *pvParameters)
 
         if (mpu2Active && isMpu2Zeroes(&cmd.sendSample.sample))
             mpu2Active = false;
+
+        digitalWrite(MPU1_LED_PIN, mpu1Active);
+        digitalWrite(MPU2_LED_PIN, mpu2Active);
 
         if (mpu1Active || mpu2Active) {
             inactiveCounter = 0;
