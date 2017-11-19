@@ -4,17 +4,9 @@
 
 The `arduino/` directory contains the source files for the Arduino sketch that will be run on the Arduino Mega.
 
-You can either compile/upload it with the Arduino IDE or with `make`.
-
-### Usage with Arduino IDE
+You can compile it by running `make` in the directory.
 
 **NOTE**: You will need to use the latest version of Arduino IDE (>1.8.0). The version provided in the Debian/Ubuntu repositories is very old, go download it from the Arduino website instead.
-
-1. Start the Arduino IDE.
-1. Go to `File` -> `Preferences`
-1. Set the "Sketchbook location" to this directory (where this `README.md` file resides). Save the preferences by clicking `OK`.
-1. Go to `File` -> `Open`. Navigate to the `arduino` directory and open the `arduino.ino` file.
-1. The sketch should be opened. You can now edit the source code and verify/upload it as needed.
 
 ### Usage with `make`
 
@@ -26,7 +18,8 @@ You can either compile/upload it with the Arduino IDE or with `make`.
 
 Clone the git repository into the raspberry pi and run `make` in the relevant directories to compile the relevant software:
 
-* `raspi-monitor`: A simple program which prints all incoming UART communication frames to stdout.
+* `raspi-monitor`: A simple program which prints all incoming UART messages to stdout.
+* `raspi-uart`: The UART communication program that is run on the system.
 
 ## Set up Raspberry Pi
 
