@@ -16,10 +16,35 @@ You can compile it by running `make` in the directory.
 
 ## Raspberry PI software
 
+### Installing systemd daemons
+
+The `raspi-service.py` script will install the necessary systemd unit files to run `raspi-uart`, `raspi-ml` and `raspi-eval` as a service.
+
+Undeterministic things will happen if you run multiple copies of this software at the same time, so when e.g. running the `raspi-uart` program on the command line, make sure its associated service (`raspi-uart.service`) has been stopped first.
+
+### C software
+
 Clone the git repository into the raspberry pi and run `make` in the relevant directories to compile the relevant software:
 
 * `raspi-monitor`: A simple program which prints all incoming UART messages to stdout.
 * `raspi-uart`: The UART communication program that is run on the system.
+
+### Python software
+Run them directly, but you will need to have the necessary dependencies installed first.
+
+* `raspi-ml.py`: Machine learning process
+* `raspi-eval.py`: Evaluation server communication process.
+
+## Libraries
+
+### ucomm
+
+Located at `libraries/ucomm`.
+
+The `ucomm` library is used for UART communication between the Arduino and Raspberry Pi.
+It will automatically be compiled and linked against the software (i.e. arduino, raspi-uart) that needs it.
+
+Run `make test` in the directory to compile and run some tests.
 
 ## Set up Raspberry Pi
 
